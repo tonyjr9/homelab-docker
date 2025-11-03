@@ -1,0 +1,16 @@
+---
+services:
+  it-tools:
+    image: corentinth/it-tools:latest
+    container_name: it-tools
+    restart: unless-stopped
+    ports:
+      - "192.168.0.102:8082:80"
+    networks:
+      - proxy_network
+
+networks:
+  proxy_network:
+    external: true
+    name: proxy_network
+

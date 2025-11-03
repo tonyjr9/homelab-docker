@@ -1,0 +1,35 @@
+---
+services:
+  homarr:
+    container_name: homarr
+    image: ghcr.io/homarr-labs/homarr:latest
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./configs:/app/data/configs
+      - ./icons:/app/public/icons
+      - ./data:/data
+      - ./imgs/backgrounds:/app/public/imgs/backgrounds
+    ports:
+      - '7575:7575'
+    environment:
+      - SECRET_ENCRYPTION_KEY=${HOMARR_SECRET_KEY}
+    networks:
+      - proxy_network
+
+  dash:
+    image: mauricenino/dashdot:latest
+    restart: unless-stopped
+    privileged: true
+    ports:
+      - '${DASHBOT_IP:-192.168.0.102}:3001:3001'
+    volumes:
+      - /:/mnt/host:ro
+    networks:
+      - proxy_network
+
+
+networks:
+  proxy_network:
+    external: true
+    name: proxy_network

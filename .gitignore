@@ -1,0 +1,150 @@
+# --- Sensitive and Secret Files ---
+*.env
+*.env.*
+.env*
+secrets/
+credentials/
+privatekey.json
+regr.json
+
+# --- Certificates and Keys ---
+*.crt
+*.pem
+*.key
+*.p12
+*.pfx
+cert*.pem
+chain*.pem
+fullchain*.pem
+privkey*.pem
+tls*.crt
+tls*.pem
+letsencrypt/
+archive/
+live/
+renewal/
+renewal-hooks/
+
+# --- Pi-hole & DNS ---
+pihole-FTL.db
+pihole-FTL.db-shm
+pihole-FTL.db-wal
+pihole.toml
+adlists.list
+versions
+
+# --- Log and Backup Files ---
+*.log
+*.bak
+*.backup
+logs/
+Crash Reports/
+qbittorrent.log
+BTbackup
+
+# --- Plex & Media Application Data ---
+Library/
+Diagnostics/
+Drivers/
+Codecs/
+Plex Media Scanner Analysis*.log
+Plex Crash Uploader*.log
+Plex Tuner Service*.log
+Plex Media Server*.log
+PMS Plugin Logs/
+appdata/
+Plex/
+Transcode/
+UpdateChannels.dat
+Sessions/
+SupportPlex Media ServerDrivers/
+cache/
+Plex/
+Plex Media Server/
+Plex Crash Uploader/
+Plex Media Scanner/
+Plex Tuner Service/
+Plex Transcoder Statistics/
+PMS Plugin Logs/
+Media/
+
+# --- Media Files and Large Content ---
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+*.tiff
+*.raw
+*.iso
+*.img
+*.mkv
+*.mp4
+*.avi
+*.mov
+*.flv
+*.wmv
+*.mp3
+*.flac
+*.wav
+
+Downloads/
+Transcode/
+torrent/
+media/
+movies/
+tv/
+music/
+photos/
+books/
+
+# --- Database and Geo Data Files ---
+*.db
+*.sqlite
+*.sqlite3
+GeoDB
+dbip-country-lite.mmdb
+
+# --- Editor and System Specific ---
+.vscode/
+.idea/
+*.iml
+*.iws
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# --- Miscellaneous ---
+sessions/
+crashreport/
+cache/
+tmp/
+temp/
+
+# --- Any config or user backup ---
+configLibraryApplication
+user-config/
+personal/
+local/
+custom/
+setup-local.sh
+config-personal.sh
+install-*.sh
+
+# --- Old Compose and Non-Repo Files ---
+old.docker-compose.yml
+*.code-workspace
+
+# Exclude directories containing migration or migration backup
+migrationbackup/
+
+proxy/data/*
+proxy/etc-pihole/*
+proxy/__atic__/*
+proxy/letsencrypt/*
+ittools/wazuh-docker
+

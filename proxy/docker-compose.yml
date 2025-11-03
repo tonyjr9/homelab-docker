@@ -1,0 +1,39 @@
+---
+services:
+  npm:
+    container_name: npm
+    image: 'jc21/nginx-proxy-manager:latest'
+    restart: unless-stopped
+    ports:
+      # These ports are in format <host-port>:<container-port>
+      - '${NPM_IP:-192.168.0.197}:80:80' # Public HTTP Port
+      - '${NPM_IP:-192.168.0.197}:443:443' # Public HTTPS Port
+      - '${NPM_IP:-192.168.0.197}:81:81' # Admin Web Port
+    volumes:
+      - ${CONFIG_PATH:-/opt/docker}/proxy/data:/data
+      - ${CONFIG_PATH:-/opt/docker}/proxy/letsencrypt:/etc/letsencrypt
+    networks:
+      - pihole
+      - proxy_network
+    
+  pihole:
+    container_name: pihole
+    image: pihole/pihole:latest
+    ports:
+      - "${PIHOLE_IP:-192.168.0.198}:80:80/tcp"
+      - "${PIHOLE_IP:-192.168.0.198}:443:443/tcp"
+      - "${PIHOLE_IP:-192.168.0.198}:53:53/tcp"
+      - "${PIHOLE_IP:-192.168.0.198}:53:53/udp"
+    environment:
+      TZ: ${TZ:-Europe/Lisbon}
+      WEBPASSWORD: ${PIHOLE_PASSWORD}
+      FTLCONF_dns_listeningMode: 'all'
+    volumes:
+      - './etc-pihole:/etc/pihole'
+      - './etc-dnsmasq.d:/etc/dnsmasq.d'
+    restart: unless-stopped
+
+networks:
+  pihole:
+  proxy_network:
+    external: true

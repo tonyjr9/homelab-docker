@@ -1,0 +1,124 @@
+---
+services:
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    ports:
+      - 9090:9090
+    restart: unless-stopped
+    networks:
+      - proxy_network
+    extra_hosts:
+      - "dockerlab:host-gateway"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prom_data:/prometheus
+
+  node_exporter:
+    container_name: node_exporter
+    image: prom/node-exporter:latest
+    command:
+      - '--path.rootfs=/host'
+      - '--collector.systemd'
+      - '--collector.processes'
+    pid: host
+    volumes:
+      - '/:/host:ro'
+    networks:
+      - proxy_network
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - 3000:3000
+    restart: unless-stopped
+    volumes:
+      - ./grafana:/etc/grafana/provisioning/datasources
+      - grafana_data:/var/lib/grafana
+    networks:
+      - proxy_network
+    environment:
+      - GF_SECURITY_DISABLE_INITIAL_ADMIN_CREATION=true
+      - GF_SECURITY_ALLOW_EMBEDDING=true
+      - GF_SECURITY_COOKIE_SAMESITE=none
+      - GF_SECURITY_COOKIE_SECURE=true
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_RENDERING_SERVER_URL=http://renderer:8081/render
+      - GF_RENDERING_CALLBACK_URL=http://grafana:3000/
+      - GF_LOG_FILTERS=rendering:debug
+      - GF_SECURITY_RATE_LIMIT_ENABLED=false
+      - GF_SECURITY_DATA_SOURCE_PROXY_WHITELIST=*
+
+  dockge:
+    image: louislam/dockge:1
+    restart: unless-stopped
+    ports:
+      - 5001:5001
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./dockge/data:/app/data
+      # Stacks Directory
+      # ⚠️ READ IT CAREFULLY. If you did it wrong, your data could end up writing into a WRONG PATH.
+      # ⚠️ 1. FULL path only. No relative path (MUST)
+      # ⚠️ 2. Left Stacks Path === Right Stacks Path (MUST)
+      - /opt/stacks:/opt/stacks
+    environment:
+      # Tell Dockge where to find the stacks
+      - /opt/stacks=/opt/stacks
+    networks:
+      - proxy_network
+#  influxdb:
+#    image: influxdb:2.7.6-alpine
+#    container_name: influxdb2
+#    ports:
+#      - 8086:8086
+#    extra_hosts:
+#      - "dockerlab:host-gateway"
+#    volumes:
+#      - influxdb2_data:/var/lib/influxdb2
+#      - ./influxdb2/config:/etc/influxdb2
+#    networks:
+#      - proxy_network
+#    environment:
+#      - DOCKER_INFLUXDB_INIT_MODE=setup
+#      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+#      - DOCKER_INFLUXDB_INIT_PASSWORD=your_secure_password
+#      - DOCKER_INFLUXDB_INIT_ORG=myorg
+#      - DOCKER_INFLUXDB_INIT_BUCKET=mybucket
+#      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=your_admin_token
+#      # ↓ Ensure it listens on all interfaces ↓
+#      - INFLUXD_BIND_ADDRESS=:8086
+#  telegraf:
+#    image: telegraf:latest
+#    pid: "host"
+#    container_name: telegraf
+#    user: telegraf:989 # make sure to run 'getent group docker' on the host for appropriate group number for docker.
+#    restart: always
+#    entrypoint: /bin/bash -c "/entrypoint.sh telegraf"
+#    extra_hosts:
+#      - "dockerlab:host-gateway"
+#    volumes:
+#      - /var/run/docker.sock:/var/run/docker.sock
+#      - ./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+#      - /:/hostfs:ro
+#    environment:
+#      - HOST_ETC=/hostfs/etc
+#      - HOST_PROC=/hostfs/proc
+#     - HOST_SYS=/hostfs/sys
+#     - HOST_VAR=/hostfs/var
+#     - HOST_RUN=/hostfs/run
+#     - HOST_MOUNT_PREFIX=/hostfs
+#     - INFLUX_TOKEN=2FoCjpvt21zkOHOi32KabXbCYgvINaY9pBv4f2KDYPpgnBWCmmVi6f3DovnD1VavJlDLZesmb8_bL6N028WMAA==
+#    networks:
+#      - proxy_network
+
+networks:
+  proxy_network:
+    external: true
+    name: proxy_network
+volumes:
+  prom_data:
+  grafana_data:
+#  influxdb2_data:

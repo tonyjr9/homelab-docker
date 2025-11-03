@@ -1,0 +1,25 @@
+---
+services:
+  syncthing:
+    image: lscr.io/linuxserver/syncthing:2.0.3
+    container_name: syncthing
+    environment:
+      - PUID=1000
+      - PGID=1000
+    volumes:
+      - /mnt/media/sync/config:/config
+      - /mnt/media/sync/data1:/data1
+      - /mnt/media/sync/data2:/data2
+    ports:
+      - 8384:8384
+      - 22000:22000/tcp
+      - 22000:22000/udp
+      - 21027:21027/udp
+    networks:
+      - proxy_network
+    restart: unless-stopped
+
+networks:
+  proxy_network:
+    external: true
+    name: proxy_network

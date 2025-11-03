@@ -1,0 +1,5 @@
+# the env variable is INFLUX_TOKEN
+
+2FoCjpvt21zkOHOi32KabXbCYgvINaY9pBv4f2KDYPpgnBWCmmVi6f3DovnD1VavJlDLZesmb8_bL6N028WMAA==
+
+onVAXZywAOQgybaHOkr443aBFWWLTY3Zz7pmPkIWpE1DlTfJMQuCj3xl9cskiQD1CzrwHVMXnxV6QYA23idX4g==
