@@ -17,18 +17,6 @@ services:
     networks:
       - proxy_network
 
-  dash:
-    image: mauricenino/dashdot:latest
-    restart: unless-stopped
-    privileged: true
-    ports:
-      - '${DASHBOT_IP:-192.168.0.102}:3001:3001'
-    volumes:
-      - /:/mnt/host:ro
-    networks:
-      - proxy_network
-
-
 networks:
   proxy_network:
     external: true
