@@ -1,16 +1,20 @@
 # Transmission
 
-Lightweight BitTorrent client configured for integration with the media stack. Optionally route traffic via a VPN container (e.g., Gluetun) for privacy.
+Lightweight BitTorrent client configured for integration with the media stack.
 
 ## Access
 - Web UI: http://server-ip:9091
 
+## Ports
+- 9091 (UI)
+- 51413 TCP/UDP (peer)
+
 ## Volumes
-- `./config:/config`
+- `/opt/docker/transmission/config:/config`
 - `/mnt/media/media/transmission/downloads:/downloads`
 - `/mnt/media/media/transmission/watch:/watch`
 
 ## Notes
-- Use *arr services (Radarr/Sonarr) to manage downloads
-- Ensure proper permissions (PUID/PGID) for file access
-- Consider VPN routing for privacy
+- Integrates with *arr services (if used)
+- Ensure correct PUID/PGID for file permissions
+- Consider VPN routing (e.g., Gluetun) for privacy
