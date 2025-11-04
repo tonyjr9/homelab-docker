@@ -1,4 +1,4 @@
-# 🏠 Homelab Docker Stack
+# Homelab Docker Stack
 
 A production-ready personal homelab built with Docker Compose: media, networking, files, monitoring, and security. External access via TP‑Link ER605 OpenVPN; Home Assistant runs as a VM on the same Debian host.
 
@@ -48,6 +48,20 @@ cd syncthing && docker-compose up -d && cd ..
 - Connect via OpenVPN on TP‑Link ER605 for secure remote access
 - Terminate TLS in Nginx Proxy Manager; forward to services on `proxy_network`
 - Pi‑hole serves local DNS (and optionally VPN clients)
+
+## 📁 Media folder is intentionally ignored
+The `media/` directory (and large media files like `.mkv/.mp4`) are **intentionally excluded** by `.gitignore` to avoid committing large/binary data. If you add *arr services later, place their compose files under `media/` (tracked) and keep actual media content outside the repository.
+
+Suggested layout:
+```
+/mnt/media/
+├── media/
+│   ├── movies/
+│   ├── tvseries/
+│   └── transmission/
+│       ├── downloads/
+│       └── watch/
+```
 
 ## 🏠 Home Assistant VM
 - Runs alongside Docker on the Debian host
