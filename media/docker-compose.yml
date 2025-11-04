@@ -1,0 +1,108 @@
+---
+services:
+  plex:
+    image: lscr.io/linuxserver/plex:latest
+    container_name: plex
+    network_mode: host
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - VERSION=docker
+      - PLEX_CLAIM=${PLEX_CLAIM_TOKEN}
+      - TZ=${TZ:-Europe/Lisbon}
+    devices:
+      - /dev/dri:/dev/dri
+    #ports:
+    #  - 32400:32400
+    volumes:
+      - ${CONFIG_PATH:-/opt/docker}/media/plex/config:/config
+      - ${MEDIA_PATH:-/mnt/media}/media/movies:/data/movies
+      - ${MEDIA_PATH:-/mnt/media}/media/tvseries:/data/tv
+    restart: unless-stopped
+
+  transmission:
+    image: lscr.io/linuxserver/transmission:latest
+    container_name: transmission
+    environment:
+      - PUID=1000
+      - PGID=1000
+    volumes:
+      - /opt/docker/transmission/config:/config
+      - /mnt/media/media/transmission/downloads:/downloads
+      - /mnt/media/media/transmission/watch:/watch
+    restart: unless-stopped
+    ports:
+      - 192.168.0.102:9091:9091
+      - 192.168.0.102:51413:51413
+      - 192.168.0.102:51413:51413/udp
+    networks:
+      - proxy_network 
+
+  overseerr:
+    image: lscr.io/linuxserver/overseerr:latest
+    container_name: overseerr
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-Europe/Lisbon}
+    volumes:
+      - ./overseer/config:/config
+      - ${DATA_PATH:-/data}:/data
+    ports:
+      - 5055:5055
+    networks:
+      - proxy_network
+    restart: unless-stopped
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-Europe/Lisbon}
+    volumes:
+      - ./radar/data:/config
+      - ${MEDIA_PATH:-/mnt/media}/media/movies:/movies
+      - ${MEDIA_PATH:-/mnt/media}/media/transmission/downloads/complete:/downloads
+    ports:
+      - 7878:7878
+    restart: unless-stopped
+    networks:
+      - proxy_network
+      
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-Europe/Lisbon}
+    volumes:
+      - ./sonarr/config:/config
+      - ${MEDIA_PATH:-/mnt/media}/media/tvseries:/tv
+      - ${MEDIA_PATH:-/mnt/media}/media/transmission/downloads/complete:/downloads
+    ports:
+      - 8989:8989
+    restart: unless-stopped
+    networks:
+      - proxy_network
+  prowllar:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowllar
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - ./prowllar/config:/config
+    ports:
+      - 9696:9696
+    restart: unless-stopped
+    networks:
+      - proxy_network
+
+networks:
+  proxy_network: 
+    external: true
+    name: proxy_network

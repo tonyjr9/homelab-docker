@@ -87,17 +87,6 @@ Media/
 *.mp3
 *.flac
 *.wav
-
-Downloads/
-Transcode/
-torrent/
-media/
-movies/
-tv/
-music/
-photos/
-books/
-
 # --- Database and Geo Data Files ---
 *.db
 *.sqlite
