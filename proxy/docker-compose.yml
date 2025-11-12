@@ -15,6 +15,7 @@ services:
     networks:
       - pihole
       - proxy_network
+      - apptjc_proxy_network
     
   pihole:
     container_name: pihole
@@ -36,4 +37,6 @@ services:
 networks:
   pihole:
   proxy_network:
+    external: true
+  apptjc_proxy_network:
     external: true
