@@ -16,6 +16,7 @@ services:
       - pihole
       - proxy_network
       - apptjc_proxy_network
+      - radarr_network
     
   pihole:
     container_name: pihole
@@ -39,4 +40,6 @@ networks:
   proxy_network:
     external: true
   apptjc_proxy_network:
+    external: true
+  radarr_network:
     external: true

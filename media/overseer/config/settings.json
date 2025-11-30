@@ -33,14 +33,14 @@
     "name": "Movies",
     "enabled": true,
     "type": "movie",
-    "lastScan": 1762974300027
+    "lastScan": 1764516900032
    },
    {
     "id": "2",
     "name": "TV Shows",
     "enabled": true,
     "type": "show",
-    "lastScan": 1762974300029
+    "lastScan": 1764516900035
    }
   ],
   "machineId": "ad47580866fe30401fd9fd5befce5974c27fec04"
@@ -54,8 +54,8 @@
    "apiKey": "786bf646ad314f1196f62aa9c717e3e9",
    "useSsl": false,
    "baseUrl": "",
-   "activeProfileId": 1,
-   "activeProfileName": "Any",
+   "activeProfileId": 5,
+   "activeProfileName": "Ultra-HD",
    "activeDirectory": "/movies",
    "is4k": false,
    "minimumAvailability": "released",
@@ -74,9 +74,9 @@
    "port": 8989,
    "apiKey": "5e2e6dfb39cf481fb53a7b9a15f125eb",
    "useSsl": false,
-   "activeProfileId": 1,
+   "activeProfileId": 4,
    "activeLanguageProfileId": 1,
-   "activeProfileName": "Any",
+   "activeProfileName": "HD-1080p",
    "activeDirectory": "/tv",
    "activeAnimeProfileId": 1,
    "activeAnimeLanguageProfileId": 1,

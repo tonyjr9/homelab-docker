@@ -87,7 +87,7 @@ services:
     restart: unless-stopped
     networks:
       - proxy_network
-  prowllar:
+  prowlarr:
     image: lscr.io/linuxserver/prowlarr:latest
     container_name: prowllar
     environment:
@@ -101,8 +101,23 @@ services:
     restart: unless-stopped
     networks:
       - proxy_network
-
+  
+  notifiarr:
+    container_name: notifiarr
+    hostname: notifiarr
+    image: golift/notifiarr
+    restart: unless-stopped
+    ports:
+      - "5454:5454"
+    volumes:
+      - ${DATA_PATH:-/data}/notifiarr:/config
+      - /var/run/utmp:/var/run/utmp
+      - /etc/machine-id:/etc/machine-id
+    networks:
+      - proxy_network
 networks:
   proxy_network: 
     external: true
     name: proxy_network
+  radarr_network:
+    name: radarr_network
