@@ -67,7 +67,7 @@ Plex Tuner Service/
 Plex Transcoder Statistics/
 PMS Plugin Logs/
 Media/
-
+*.env
 # --- Media Files and Large Content ---
 *.jpg
 *.jpeg

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xbel version="1.0"
+      xmlns:bookmark="http://www.freedesktop.org/standards/desktop-bookmarks"
+      xmlns:mime="http://www.freedesktop.org/standards/shared-mime-info"
+>
+  <bookmark href="file:///config/Desktop/obsidian/Tuna" added="2025-12-05T15:22:07.125333Z" modified="2025-12-05T15:26:27.729354Z" visited="2025-12-05T15:22:07.125334Z">
+    <info>
+      <metadata owner="http://freedesktop.org">
+        <mime:mime-type type="inode/directory"/>
+        <bookmark:applications>
+          <bookmark:application name="obsidian" exec="&apos;obsidian %u&apos;" modified="2025-12-05T15:26:27.729352Z" count="2"/>
+        </bookmark:applications>
+      </metadata>
+    </info>
+  </bookmark>
+  <bookmark href="file:///config/Desktop/obsidian" added="2025-12-05T15:26:32.717085Z" modified="2025-12-05T15:29:04.622046Z" visited="2025-12-05T15:26:32.717086Z">
+    <info>
+      <metadata owner="http://freedesktop.org">
+        <mime:mime-type type="inode/directory"/>
+        <bookmark:applications>
+          <bookmark:application name="obsidian" exec="&apos;obsidian %u&apos;" modified="2025-12-05T15:29:04.622027Z" count="2"/>
+        </bookmark:applications>
+      </metadata>
+    </info>
+  </bookmark>
+</xbel>

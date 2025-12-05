@@ -30,7 +30,7 @@
     "peer-congestion-algorithm": "",
     "peer-id-ttl-hours": 6,
     "peer-limit-global": 200,
-    "peer-limit-per-torrent": 70,
+    "peer-limit-per-torrent": 50,
     "peer-port": 51413,
     "peer-port-random-high": 65535,
     "peer-port-random-low": 49152,
@@ -76,7 +76,7 @@
     "trash-original-torrent-files": false,
     "umask": "002",
     "upload-slots-per-torrent": 14,
-    "utp-enabled": true,
+    "utp-enabled": false,
     "watch-dir": "/watch",
     "watch-dir-enabled": true
 }
