@@ -38,36 +38,18 @@ versions
 *.bak
 *.backup
 logs/
-Crash Reports/
 qbittorrent.log
-BTbackup
 
 # --- Plex & Media Application Data ---
-Library/
-Diagnostics/
-Drivers/
-Codecs/
-Plex Media Scanner Analysis*.log
-Plex Crash Uploader*.log
-Plex Tuner Service*.log
-Plex Media Server*.log
-PMS Plugin Logs/
-appdata/
-Plex/
-Transcode/
-UpdateChannels.dat
-Sessions/
-SupportPlex Media ServerDrivers/
-cache/
-Plex/
-Plex Media Server/
-Plex Crash Uploader/
-Plex Media Scanner/
-Plex Tuner Service/
-Plex Transcoder Statistics/
-PMS Plugin Logs/
-Media/
-*.env
+edia/
+.env
+media/.env
+dashboard/.env
+ittools/.env
+nextcloud/.env
+proxy/.env
+syncthing/.env
+
 # --- Media Files and Large Content ---
 *.jpg
 *.jpeg
