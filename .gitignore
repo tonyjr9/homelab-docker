@@ -89,6 +89,18 @@ Thumbs.db
 ehthumbs.db
 Desktop.ini
 
+media/
+media/immich
+media/overseer
+media/prowllar
+media/radar
+media/sonarr
+media/transmission
+media/tautulli
+media/transmission
+media/plex
+
+
 # --- Miscellaneous ---
 sessions/
 crashreport/
