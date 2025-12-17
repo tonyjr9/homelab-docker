@@ -1,133 +1,156 @@
-# --- Sensitive and Secret Files ---
-*.env
-*.env.*
-.env*
-secrets/
-credentials/
-privatekey.json
-regr.json
-
-# --- Certificates and Keys ---
-*.crt
-*.pem
-*.key
-*.p12
-*.pfx
-cert*.pem
-chain*.pem
-fullchain*.pem
-privkey*.pem
-tls*.crt
-tls*.pem
-letsencrypt/
-archive/
-live/
-renewal/
-renewal-hooks/
-
-# --- Pi-hole & DNS ---
-pihole-FTL.db
-pihole-FTL.db-shm
-pihole-FTL.db-wal
-pihole.toml
-adlists.list
-versions
-
-# --- Log and Backup Files ---
-*.log
-*.bak
-*.backup
-logs/
-qbittorrent.log
-
-# --- Plex & Media Application Data ---
-edia/
+# =============================================================================
+# ENVIRONMENT & SECRETS
+# =============================================================================
+# Environment files with secrets
 .env
-media/.env
-dashboard/.env
-ittools/.env
-nextcloud/.env
-proxy/.env
-syncthing/.env
+.env.local
+.env.*.local
+*.env
+!*.env.example
+!*.env.template
 
-# --- Media Files and Large Content ---
-*.jpg
-*.jpeg
-*.png
-*.gif
-*.bmp
-*.tiff
-*.raw
-*.iso
-*.img
-*.mkv
-*.mp4
-*.avi
-*.mov
-*.flv
-*.wmv
-*.mp3
-*.flac
-*.wav
-# --- Database and Geo Data Files ---
+# =============================================================================
+# DATA DIRECTORIES (Application runtime data, databases, caches)
+# =============================================================================
+# Dashboard
+dashboard/beszel_agent_data/
+dashboard/beszel_data/
+dashboard/beszel_socket/
+dashboard/configs/
+dashboard/data/
+dashboard/icons/
+dashboard/imgs/
+
+# IT Tools
+ittools/config/
+ittools/wazuh-docker/data/
+ittools/wazuh-docker/docker-data/
+
+# Media Services
+media/immich/
+media/overseer/
+media/plex/
+media/prowlarn/
+media/radarr/
+media/sonarr/
+media/tautulli/
+media/transmission/
+
+# Nextcloud
+nextcloud/db/
+nextcloud/data/
+nextcloud/html/
+nextcloud/config/
+nextcloud/old/
+
+# Proxy
+proxy/data/
+proxy/letsencrypt/
+proxy/etc-pihole/
+proxy/etc-dnsmasq.d/
+proxy/ddns/data/config.json
+proxy/ddns/data/updates.json
+proxy/__attic__/
+
+# Syncthing
+syncthing/data/
+syncthing/config/
+
+# Transmission
+transmission/config/
+transmission/downloads/
+transmission/watch/
+
+# Minecraft
+minecraft/data/
+minecraft/world/
+minecraft/plugins/
+minecraft/mods/
+
+# Monitoring
+monitoring/data/
+monitoring/grafana/
+
+# Backups
+backups/
+*.tar.gz
+*.zip
+*.sql
+*.dump
+
+# =============================================================================
+# DOCKER RUNTIME FILES
+# =============================================================================
+# Override files (for local customizations)
+docker-compose.override.yml
+**/docker-compose.override.yml
+*.override.yml
+
+# =============================================================================
+# DATABASES & LOGS
+# =============================================================================
+# Database files
 *.db
+*.db-shm
+*.db-wal
 *.sqlite
 *.sqlite3
-GeoDB
-dbip-country-lite.mmdb
 
-# --- Editor and System Specific ---
-.vscode/
-.idea/
-*.iml
-*.iws
+# Log files
+*.log
+logs/
+**/logs/
+
+# =============================================================================
+# CERTIFICATES & KEYS
+# =============================================================================
+# SSL/TLS certificates and private keys
+*.pem
+*.key
+*.crt
+*.cer
+*.p12
+*.pfx
+id_ed25519
+id_rsa
+*.pub
+fingerprint
+**/letsencrypt/
+
+# =============================================================================
+# TEMPORARY & SYSTEM FILES
+# =============================================================================
+# Backup files
+*.bak
+*.backup
+*.old
+*~
 *.swp
 *.swo
-*~
+
+# OS files
 .DS_Store
 Thumbs.db
-ehthumbs.db
-Desktop.ini
+desktop.ini
 
-media/
-media/immich
-media/overseer
-media/prowllar
-media/radar
-media/sonarr
-media/transmission
-media/tautulli
-media/transmission
-media/plex
+# Editor files
+.vscode/
+.idea/
+*.sublime-*
 
+# =============================================================================
+# ALLOW ESSENTIAL FILES
+# =============================================================================
+# Explicitly include important files
+!docker-compose.yml
+!**/docker-compose.yml
+!README.md
+!**/README.md
+!.env.example
+!**/.env.example
+!prometheus.yml
+!**/prometheus.yml
 
-# --- Miscellaneous ---
-sessions/
-crashreport/
-cache/
-tmp/
-temp/
-
-# --- Any config or user backup ---
-configLibraryApplication
-user-config/
-personal/
-local/
-custom/
-setup-local.sh
-config-personal.sh
-install-*.sh
-
-# --- Old Compose and Non-Repo Files ---
-old.docker-compose.yml
-*.code-workspace
-
-# Exclude directories containing migration or migration backup
-migrationbackup/
-
-proxy/data/*
-proxy/etc-pihole/*
-proxy/__atic__/*
-proxy/letsencrypt/*
-ittools/wazuh-docker
+# Allow empty config directories with .gitkeep
+!**/.gitkeep
 

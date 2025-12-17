@@ -1,0 +1,25 @@
+# Environment variables with secrets
+.env
+.env.local
+.env.*.local
+
+# DDNS updater data (contains token)
+ddns/data/config.json
+ddns/data/updates.json
+
+# Pi-hole configuration (may contain passwords)
+etc-pihole/
+etc-dnsmasq.d/
+
+# Nginx Proxy Manager data (contains certificates and configs)
+data/
+letsencrypt/
+
+# Override files with local settings
+docker-compose.override.yml
+*.override.yml
+
+# Backup files
+*.bak
+*~
+

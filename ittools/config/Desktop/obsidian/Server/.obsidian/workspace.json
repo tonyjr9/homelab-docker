@@ -20,8 +20,23 @@
               "icon": "lucide-file",
               "title": "Welcome"
             }
+          },
+          {
+            "id": "d48b4d75d2fed544",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Nginx certificate.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Nginx certificate"
+            }
           }
-        ]
+        ],
+        "currentTab": 1
       },
       {
         "id": "c90374e88f1ca6c1",
@@ -110,7 +125,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Welcome.md",
+                "file": "Nginx certificate.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -120,7 +135,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Backlinks for Welcome"
+              "title": "Backlinks for Nginx certificate"
             }
           },
           {
@@ -129,12 +144,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Welcome.md",
+                "file": "Nginx certificate.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
               "icon": "links-going-out",
-              "title": "Outgoing links from Welcome"
+              "title": "Outgoing links from Nginx certificate"
             }
           },
           {
@@ -172,13 +187,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Welcome.md",
+                "file": "Nginx certificate.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of Welcome"
+              "title": "Outline of Nginx certificate"
             }
           }
         ]
@@ -199,8 +214,9 @@
       "bases:Create new base": false
     }
   },
-  "active": "969261d11ca133a7",
+  "active": "d48b4d75d2fed544",
   "lastOpenFiles": [
-    "Welcome.md"
+    "Welcome.md",
+    "Nginx certificate.md"
   ]
 }

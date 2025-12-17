@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Welcome.md",
+                "file": "APP Tuna.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Welcome"
+              "title": "APP Tuna"
             }
           }
         ]
@@ -201,6 +201,6 @@
   },
   "active": "91904e2df6d38ad7",
   "lastOpenFiles": [
-    "Welcome.md"
+    "APP Tuna.md"
   ]
 }

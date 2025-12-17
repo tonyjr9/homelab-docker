@@ -8,39 +8,40 @@ language: ru-RU
 type: semi-private
 encoding: windows-1251
 followredirect: true
+# alternate TLDs are: buzz, homes, mom, online, shop, top and xyz
 links:
-  - https://dec03.rudub.world/
+  - https://dec15.rudub.bet/
 legacylinks:
-  - https://nov18.rudub.pics/
-  - http://nov19.rudub.pics/
-  - https://nov19.rudub.pics/
-  - http://nov20.rudub.pics/
-  - https://nov20.rudub.pics/
-  - http://nov21.rudub.pics/
-  - https://nov21.rudub.pics/
-  - http://nov22.rudub.pics/
-  - https://nov22.rudub.pics/
-  - http://nov23.rudub.pics/
-  - https://nov23.rudub.pics/
-  - http://nov24.rudub.pics/
-  - https://nov24.rudub.pics/
-  - http://nov25.rudub.world/
-  - https://nov25.rudub.world/
-  - http://nov26.rudub.world/
-  - https://nov26.rudub.world/
-  - http://nov27.rudub.world/
-  - https://nov27.rudub.world/
-  - http://nov28.rudub.world/
-  - https://nov28.rudub.world/
-  - http://nov29.rudub.world/
-  - https://nov29.rudub.world/
-  - http://nov30.rudub.world/
-  - https://nov30.rudub.world/
   - http://dec01.rudub.world/
   - https://dec01.rudub.world/
   - http://dec02.rudub.world/
   - https://dec02.rudub.world/
   - http://dec03.rudub.world/
+  - https://dec03.rudub.world/
+  - http://dec04.rudub.world/
+  - https://dec04.rudub.world/
+  - http://dec05.rudub.world/
+  - https://dec05.rudub.world/
+  - http://dec06.rudub.world/
+  - https://dec06.rudub.world/
+  - http://dec07.rudub.world/
+  - https://dec07.rudub.world/
+  - http://dec08.rudub.world/
+  - https://dec08.rudub.world/
+  - https://dec08.rudub.bet/
+  - http://dec09.rudub.bet/
+  - https://dec09.rudub.bet/
+  - http://dec10.rudub.bet/
+  - https://dec10.rudub.bet/
+  - http://dec11.rudub.bet/
+  - https://dec11.rudub.bet/
+  - http://dec12.rudub.bet/
+  - https://dec12.rudub.bet/
+  - http://dec13.rudub.bet/
+  - https://dec13.rudub.bet/
+  - http://dec14.rudub.bet/
+  - https://dec14.rudub.bet/
+  - http://dec15.rudub.bet/
 caps:
   categorymappings:
     - {id: 1, cat: TV, desc: "TV"}

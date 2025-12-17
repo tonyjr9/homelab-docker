@@ -16,7 +16,50 @@ services:
       - SECRET_ENCRYPTION_KEY=${HOMARR_SECRET_KEY}
     networks:
       - proxy_network
-  
+
+
+  dash:
+    image: mauricenino/dashdot:latest
+    restart: unless-stopped
+    privileged: true
+    ports:
+      - '192.168.0.102:3001:3001'
+    volumes:
+      - /:/mnt/host:ro
+    environment:
+      # CPU & Temperature Monitoring
+      DASHDOT_ENABLE_CPU_TEMPS: 'true'
+      DASHDOT_CPU_TEMPS_MODE: 'auto'  # auto, psutil, lm-sensors
+
+      # GPU Monitoring
+
+      # Network
+      DASHDOT_ENABLE_NETWORK: 'true'
+      DASHDOT_NETWORK_INTERFACE: 'eno1'  # Change to your interface
+
+      # Storage
+      DASHDOT_ENABLE_STORAGE: 'true'
+
+      # Processes
+      DASHDOT_ENABLE_PROCESSES: 'true'
+
+      # OS Info
+      DASHDOT_ENABLE_OS: 'true'
+
+      # Theming
+      DASHDOT_LIGHT_MODE: 'false'  # true for light theme
+      DASHDOT_ACCENT_COLOR: '#FF0000'  # Hex color
+
+      # Server Settings
+      DASHDOT_PORT: '3001'
+      DASHDOT_OVERRIDE_OS: ''  # Leave empty for auto-detect
+
+      # Advanced
+      DASHDOT_ALWAYS_SHOW_PERCENTAGES: 'true'
+      DASHDOT_SPEED_AVERAGE_COUNT: '10'
+      DASHDOT_GRAPH_MAX_DATAPOINTS: '20'
+      DASHDOT_WIDGET_LIST: 'os,cpu,storage,ram,network'  # Custom widget order
+
   beszel:
     image: henrygd/beszel:latest
     container_name: beszel
@@ -26,6 +69,8 @@ services:
     volumes:
       - ./beszel_data:/beszel_data
       - ./beszel_socket:/beszel_socket
+    networks:
+      - proxy_network
 
   beszel-agent:
     image: henrygd/beszel-agent:latest
@@ -41,6 +86,7 @@ services:
       KEY: 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINr7BMk1yyA28U/su2afPD04PQawhSyVJgKvgEoMcqOM'
       TOKEN: be4b6acb-876a-460d-8d31-e64cedbd6700
       HUB_URL: http://192.168.0.102:8090
+
 
 
 networks:

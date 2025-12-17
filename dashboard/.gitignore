@@ -1,0 +1,11 @@
+beszel_agent_data/
+beszel_data/
+beszel_socket/
+configs/
+data/
+icons/
+imgs/
+*.db
+*.db-shm
+*.db-wal
+

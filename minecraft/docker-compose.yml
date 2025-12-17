@@ -1,0 +1,24 @@
+services:
+  mc-vanilla:
+    image: itzg/minecraft-server
+    container_name: mc-vanilla
+    restart: unless-stopped
+    ports:
+      - "25565:25565"        # adjust if you want non-default
+    environment:
+      EULA: "TRUE"
+      TYPE: "VANILLA"
+      VERSION: "LATEST"
+      MEMORY: "4G"          # 4G is plenty on your i7-8700
+      ENABLE_WHITELIST: "TRUE"
+      ONLINE_MODE: "TRUE"   # keep true unless you handle auth yourself
+    volumes:
+      - /mnt/media/minecraft/data:/data
+    stdin_open: true
+    tty: true
+    networks:
+      - proxy_network
+
+networks:
+  proxy_network:
+    external: true

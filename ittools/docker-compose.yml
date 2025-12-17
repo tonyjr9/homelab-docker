@@ -8,35 +8,7 @@ services:
       - "192.168.0.102:8082:80"
     networks:
       - proxy_network
-  
-  obsidian:
-    image: ghcr.io/linuxserver/obsidian:latest
-    container_name: obsidian
-    security_opt:
-      - no-new-privileges:false
-      - seccomp:unconfined
-    healthcheck:
-      test: timeout 10s bash -c ':> /dev/tcp/127.0.0.1/3000' || exit 1
-      interval: 10s
-      timeout: 5s
-      retries: 3
-      start_period: 90s
-    ports:
-      - "192.168.0.102:3000:3000"
-    shm_size: "2gb"
-    volumes:
-      - ./config:/config:rw
-    environment:
-      CUSTOM_USER: ${CUSTOM_USER}
-      PASSWORD: ${PASSWORD}
-      PUID: 1000
-      PGID: 1000
-      TZ: Lisbon/Portugal 
-    restart: unless-stopped
-    networks:
-      - proxy_network
-
-networks:
+ networks:
   proxy_network:
     external: true
     name: proxy_network
