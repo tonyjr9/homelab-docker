@@ -68,10 +68,8 @@
 | Component | Model | Notes |
 |-----------|-------|-------|
 | **Router/Gateway** | TP-Link ER605 | OpenVPN server, DDNS, port forwarding, 4x Gigabit LAN + 1x WAN |
-| **Host Server** | Custom Debian 12 | Ryzen 5 5600X, 32GB RAM, 2x 2TB NVMe (RAID 1), 4x 6TB HDD |
-| **Hypervisor** | KVM/libvirt/virt-manager | Hosts Home Assistant VM (4 vCPU, 4GB RAM) + other VMs |
-| **Network Storage** | Synology NAS (optional) | For media backups and off-site sync |
-| **UPS** | APC Smart-UPS | Ensures graceful shutdown on power loss |
+| **Host Server** | Custom Debian 13 | I7 8700H, 40GB RAM, 1x 256GB NVMe, 1x 12TB HDD |
+| **Hypervisor** | KVM/libvirt/virt-manager | Hosts Home Assistant VM (2 vCPU, 4GB RAM) |
 
 ---
 
