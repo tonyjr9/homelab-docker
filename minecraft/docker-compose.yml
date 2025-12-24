@@ -7,11 +7,11 @@ services:
       - "25565:25565"        # adjust if you want non-default
     environment:
       EULA: "TRUE"
-      TYPE: "VANILLA"
-      VERSION: "LATEST"
+      TYPE: "FABRIC"
+      VERSION: "1.21.11"
       MEMORY: "4G"          # 4G is plenty on your i7-8700
-      ENABLE_WHITELIST: "TRUE"
-      ONLINE_MODE: "TRUE"   # keep true unless you handle auth yourself
+      ENABLE_WHITELIST: "FALSE"
+      ONLINE_MODE: "FALSE"   # keep true unless you handle auth yourself
     volumes:
       - /mnt/media/minecraft/data:/data
     stdin_open: true
