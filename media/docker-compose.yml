@@ -26,10 +26,12 @@ services:
     environment:
       - PUID=1000
       - PGID=1000
+      - TRANSMISSION_SCRIPT_TORRENT_DONE_ENABLED=true
+      - TRANSMISSION_SCRIPT_TORRENT_DONE_FILENAME=/config/scripts/torrent-done.sh
     volumes:
       - /opt/docker/transmission/config:/config
       - /mnt/media/media/transmission/downloads:/downloads
-      - /mnt/media/media/transmission/watch:/watch
+#      - /mnt/media/media/transmission/watch:/watch
     restart: unless-stopped
     ports:
       - 192.168.0.102:9091:9091
@@ -37,6 +39,7 @@ services:
       - 192.168.0.102:51413:51413/udp
     networks:
       - proxy_network 
+
 
   overseerr:
     image: lscr.io/linuxserver/overseerr:latest

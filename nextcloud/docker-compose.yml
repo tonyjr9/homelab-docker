@@ -5,7 +5,7 @@ services:
     restart: unless-stopped
     command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW --innodb-file-per-table=1 --skip-innodb-read-only-compressed
     volumes:
-      - /mnt/media/nextcloud/db:/var/lib/mysql
+      - ./db:/var/lib/mysql
     env_file:
       - nextcloud.env
     networks:
@@ -31,7 +31,7 @@ services:
       - 8080:80
     volumes:
       # - /mnt/media/nextcloud/root:/var/www/html
-      - /mnt/media/nextcloud/config:/config
+      - ./config:/config
       - /mnt/media/nextcloud/data:/data
     environment:
       - PUID=1000
