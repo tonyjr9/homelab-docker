@@ -111,7 +111,7 @@ cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
 | Service | IP Address | Purpose |
 |---------|-----------|----------|
 | **Debian Server** | 192.168.0.102 | Docker services, internal routing |
-| **Nginx Proxy Manager** | 192.168.0.198 | Reverse proxy, TLS termination, external access |
+| **Nginx Proxy Manager** | 192.168.0.197 | Reverse proxy, TLS termination, external access |
 | **Pi-hole** | 192.168.0.198 | DNS resolution, ad-blocking (same as NPM) |
 | **Home Assistant VM** | Dynamic | KVM/libvirt managed, accessible via proxy |
 
@@ -144,7 +144,7 @@ TP-Link ER605 (192.168.0.1)
     |
 192.168.0.0/24 LAN
     |
-Debian Server (192.168.0.102 primary, 192.168.0.198 proxy)
+Debian Server (192.168.0.102 primary, 192.168.0.197 proxy, 192.168.0.198 pihole)
     |
     +-- Docker Stack (proxy_network)
     |   ├── Nginx Proxy Manager (80/443/81)
@@ -481,7 +481,7 @@ MEDIA_PATH=/mnt/media
 
 # Networking
 DOCKER_SERVER_IP=192.168.0.102
-NPM_IP=192.168.0.198
+NPM_IP=192.168.0.197
 PIHOLE_IP=192.168.0.198
 
 # Timezone
@@ -538,7 +538,7 @@ NPM provides:
 - Access control and authentication
 - Service routing
 
-Setup via NPM UI (http://192.168.0.198:81):
+Setup via NPM UI (http://192.168.0.197:81):
 1. Admin Panel > Proxy Hosts
 2. Add new proxy host
 3. Configure domain, SSL certificate, upstream service
