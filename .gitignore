@@ -1,156 +1,132 @@
-# =============================================================================
-# ENVIRONMENT & SECRETS
-# =============================================================================
-# Environment files with secrets
+# Environment variables and secrets
 .env
 .env.local
 .env.*.local
 *.env
-!*.env.example
-!*.env.template
+env.sh
 
-# =============================================================================
-# DATA DIRECTORIES (Application runtime data, databases, caches)
-# =============================================================================
-# Dashboard
-dashboard/beszel_agent_data/
-dashboard/beszel_data/
-dashboard/beszel_socket/
-dashboard/configs/
-dashboard/data/
-dashboard/icons/
-dashboard/imgs/
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+*.sql
+*.sql.gz
 
-# IT Tools
-ittools/config/
-ittools/wazuh-docker/data/
-ittools/wazuh-docker/docker-data/
+# SSL/TLS Certificates and keys
+*.pem
+*.key
+*.crt
+*.cert
+*.cer
+letsencrypt/
+certs/
+ssl/
 
-# Media Services
-media/immich/
-media/overseer/
-media/plex/
-media/prowlarn/
-media/radarr/
-media/sonarr/
-media/tautulli/
-media/transmission/
+# SSH keys
+*.pub
+id_rsa
+id_dsa
+id_ecdsa
+id_ed25519
+.ssh/
 
-# Nextcloud
-nextcloud/db/
-nextcloud/data/
-nextcloud/html/
-nextcloud/config/
-nextcloud/old/
+# Runtime data directories
+config/
+data/
+db/
+logs/
+*.log
+state/
 
-# Proxy
+# Docker volumes (mounted data)
+volumes/
+
+# Service-specific data (not tracked)
 proxy/data/
 proxy/letsencrypt/
 proxy/etc-pihole/
 proxy/etc-dnsmasq.d/
-proxy/ddns/data/config.json
-proxy/ddns/data/updates.json
-proxy/__attic__/
+proxy/ddns/data/
 
-# Syncthing
-syncthing/data/
+dashboard/configs/
+dashboard/data/
+dashboard/icons/
+dashboard/imgs/
+dashboard/beszel_data/
+
+nextcloud/config/
+nextcloud/data/
+nextcloud/db/
+nextcloud/nextcloud.env
+nextcloud/old/
+
+media/transmission/
+media/config/
+
 syncthing/config/
 
-# Transmission
-transmission/config/
-transmission/downloads/
-transmission/watch/
-
-# Minecraft
-minecraft/data/
 minecraft/world/
-minecraft/plugins/
-minecraft/mods/
+minecraft/server.properties
 
-# Monitoring
-monitoring/data/
-monitoring/grafana/
-
-# Backups
+# Backup files
 backups/
+*.tar
 *.tar.gz
 *.zip
-*.sql
-*.dump
-
-# =============================================================================
-# DOCKER RUNTIME FILES
-# =============================================================================
-# Override files (for local customizations)
-docker-compose.override.yml
-**/docker-compose.override.yml
-*.override.yml
-
-# =============================================================================
-# DATABASES & LOGS
-# =============================================================================
-# Database files
-*.db
-*.db-shm
-*.db-wal
-*.sqlite
-*.sqlite3
-
-# Log files
-*.log
-logs/
-**/logs/
-
-# =============================================================================
-# CERTIFICATES & KEYS
-# =============================================================================
-# SSL/TLS certificates and private keys
-*.pem
-*.key
-*.crt
-*.cer
-*.p12
-*.pfx
-id_ed25519
-id_rsa
-*.pub
-fingerprint
-**/letsencrypt/
-
-# =============================================================================
-# TEMPORARY & SYSTEM FILES
-# =============================================================================
-# Backup files
 *.bak
-*.backup
-*.old
-*~
-*.swp
-*.swo
+*_backup.*
 
-# OS files
-.DS_Store
-Thumbs.db
-desktop.ini
+# Large media files
+*.iso
+*.img
+*.dmg
 
-# Editor files
+# Local development
 .vscode/
 .idea/
-*.sublime-*
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
 
-# =============================================================================
-# ALLOW ESSENTIAL FILES
-# =============================================================================
-# Explicitly include important files
-!docker-compose.yml
-!**/docker-compose.yml
-!README.md
-!**/README.md
-!.env.example
-!**/.env.example
-!prometheus.yml
-!**/prometheus.yml
+# Node modules
+node_modules/
 
-# Allow empty config directories with .gitkeep
-!**/.gitkeep
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.venv/
+venv/
 
+# IDE
+.vscode
+.idea
+.sublime-project
+.sublime-workspace
+
+# OS specific
+.DS_Store
+Thumbs.db
+.AppleDouble
+.LSOverride
+
+# Docker compose overrides (local only)
+docker-compose.override.yml
+
+# Temporary files
+.tmp/
+temp/
+*.tmp
+
+# PID files
+*.pid
+
+# Lock files (keep some, ignore others based on project needs)
+npm-debug.log
+yarn-error.log
+
+# Systemd override files
+/etc/rc.local.override
