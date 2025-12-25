@@ -15,6 +15,7 @@ Production-ready personal homelab built with Docker Compose for media, networkin
 - [System Configuration](#system-configuration)
 - [Storage Architecture](#storage-architecture)
 - [Quick Start](#quick-start)
+- [Management Script](#management-script)
 - [Directory Structure](#directory-structure)
 - [Configuration](#configuration)
 - [Networking & Security](#networking--security)
@@ -111,7 +112,7 @@ cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
 | Service | IP Address | Purpose |
 |---------|-----------|----------|
 | **Debian Server** | 192.168.0.102 | Docker services, internal routing |
-| **Nginx Proxy Manager** | 192.168.0.197 | Reverse proxy, TLS termination, external access |
+| **Nginx Proxy Manager** | 192.168.0.198 | Reverse proxy, TLS termination, external access |
 | **Pi-hole** | 192.168.0.198 | DNS resolution, ad-blocking (same as NPM) |
 | **Home Assistant VM** | Dynamic | KVM/libvirt managed, accessible via proxy |
 
@@ -144,7 +145,7 @@ TP-Link ER605 (192.168.0.1)
     |
 192.168.0.0/24 LAN
     |
-Debian Server (192.168.0.102 primary, 192.168.0.197 proxy, 192.168.0.198 pihole)
+Debian Server (192.168.0.102 primary, 192.168.0.198 proxy)
     |
     +-- Docker Stack (proxy_network)
     |   ├── Nginx Proxy Manager (80/443/81)
@@ -417,6 +418,101 @@ docker-compose logs npm -f
 
 ---
 
+## Management Script
+
+A comprehensive interactive management script is provided for easy homelab administration.
+
+### Features
+
+- **Docker Services**: Start/stop/restart all services or individual stacks
+- **System Monitoring**: HDD status, disk I/O, container resources, network connections
+- **Power Management**: Force HDD spindown, check CPU governor, view power config
+- **Maintenance**: Clean Docker, backup Nextcloud/Minecraft, check for updates
+- **Logs & Debugging**: View logs, test connectivity, check webhooks
+
+### Installation
+
+```bash
+# Copy script to system path
+sudo cp /opt/docker/manage.sh /usr/local/bin/manage.sh
+
+# Make executable
+sudo chmod +x /usr/local/bin/manage.sh
+
+# Create convenient alias
+echo "alias manage='sudo /usr/local/bin/manage.sh'" >> ~/.bashrc
+source ~/.bashrc
+```
+
+### Usage
+
+```bash
+# Launch interactive menu
+manage
+```
+
+**Menu Options:**
+
+```
+[Docker Services]
+1) Start all services
+2) Stop all services
+3) Restart all services
+4) Service status
+5) View logs
+6) Update all containers
+
+[Individual Services]
+10) Proxy (NPM, Pi-hole, DDNS)
+11) Dashboard (Homarr, Beszel)
+12) Nextcloud stack
+13) Media services
+14) Syncthing
+15) Minecraft
+
+[System Monitoring]
+20) HDD status & spindown info
+21) Disk I/O activity (iotop)
+22) Container resource usage
+23) Disk space usage
+24) Network connections
+25) System overview
+
+[Power Management]
+30) Force HDD spindown now
+31) Check CPU governor
+32) Show power management config
+
+[Maintenance]
+40) Clean Docker (prune unused)
+41) Backup Nextcloud database
+42) Backup Minecraft world
+43) Check for updates
+
+[Logs & Debugging]
+50) Transmission webhook log
+51) View service logs (choose)
+52) Check network connectivity
+```
+
+**Quick Examples:**
+
+```bash
+# Check HDD status
+manage  # Then press 20
+
+# Monitor disk I/O
+manage  # Then press 21
+
+# Restart all services
+manage  # Then press 3
+
+# Backup Nextcloud
+manage  # Then press 41
+```
+
+---
+
 ## Directory Structure
 
 ```
@@ -425,6 +521,7 @@ docker-compose logs npm -f
 ├── .env.example                   # Template
 ├── .gitignore                     # Secrets protection
 ├── README.md                      # This file
+├── manage.sh                      # Management script
 │
 ├── proxy/                         # See proxy/README.md
 │   ├── docker-compose.yml
@@ -481,7 +578,7 @@ MEDIA_PATH=/mnt/media
 
 # Networking
 DOCKER_SERVER_IP=192.168.0.102
-NPM_IP=192.168.0.197
+NPM_IP=192.168.0.198
 PIHOLE_IP=192.168.0.198
 
 # Timezone
@@ -538,7 +635,7 @@ NPM provides:
 - Access control and authentication
 - Service routing
 
-Setup via NPM UI (http://192.168.0.197:81):
+Setup via NPM UI (http://192.168.0.198:81):
 1. Admin Panel > Proxy Hosts
 2. Add new proxy host
 3. Configure domain, SSL certificate, upstream service
