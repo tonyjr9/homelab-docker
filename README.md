@@ -9,6 +9,7 @@ Production-ready personal homelab built with Docker Compose for media, networkin
 ## Table of Contents
 
 - [Host Infrastructure](#host-infrastructure)
+- [Network Configuration](#network-configuration)
 - [Architecture](#architecture)
 - [Service Documentation](#service-documentation)
 - [System Configuration](#system-configuration)
@@ -28,9 +29,13 @@ Production-ready personal homelab built with Docker Compose for media, networkin
 
 | Component | Model | Specifications |
 |-----------|-------|---|
-| **Host OS** | Debian 13 | I7-8700H, 40GB RAM, 1x 256GB NVMe, 1x 12TB HDD |
+| **Host OS** | Debian 13 | I7-8700H, 40GB RAM, 1x 256GB NVMe SSD |
+| **Storage** | HDD Array | Currently 1x 12TB (future: RAID 10 with 4x HDDs) |
 | **Hypervisor** | KVM/libvirt (virt-manager) | Hosts Home Assistant VM (2 vCPU, 4GB RAM) |
-| **Router/Gateway** | TP-Link ER605 | OpenVPN server, DDNS, port forwarding, 4x Gigabit LAN + 1x WAN |
+| **Router/Gateway** | TP-Link ER605 | OpenVPN server, DDNS, port forwarding, Gigabit LAN |
+
+**Storage Expansion Plan:**
+Current single 12TB HDD will be replaced with RAID 10 configuration (4x HDDs) for redundancy and performance. Provides fault tolerance with 2x disk failure resistance.
 
 ### System-Level Configuration
 
@@ -57,8 +62,6 @@ exit 0
 - CPU scales from 800 MHz (idle) to 4.6 GHz (under load)
 - Reduces power consumption by 10-15W at idle
 - No performance impact on loaded workloads (Minecraft, downloads, etc.)
-
-**Note:** This setup assumes single HDD. Future upgrade to RAID 1 or higher recommended for data redundancy.
 
 #### Service Spindown Optimization
 
@@ -99,6 +102,33 @@ cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
 
 ---
 
+## Network Configuration
+
+### IP Address Management
+
+**Multiple IPs configured via network tool for service isolation:**
+
+| Service | IP Address | Purpose |
+|---------|-----------|----------|
+| **Debian Server** | 192.168.0.102 | Docker services, internal routing |
+| **Nginx Proxy Manager** | 192.168.0.198 | Reverse proxy, TLS termination, external access |
+| **Pi-hole** | 192.168.0.198 | DNS resolution, ad-blocking (same as NPM) |
+| **Home Assistant VM** | Dynamic | KVM/libvirt managed, accessible via proxy |
+
+**Network configuration:**
+```bash
+# Multiple IPs configured on primary network interface
+# Allows service-specific routing and load distribution
+# Managed via network tool (netplan, ifupdown, or systemd-networkd)
+```
+
+**TP-Link ER605 Gateway:**
+- LAN IP: 192.168.0.1
+- OpenVPN Server: 10.0.0.0/24 (remote access)
+- DDNS: vpn.duckdns.org
+
+---
+
 ## Architecture
 
 ### Network Topology
@@ -114,26 +144,39 @@ TP-Link ER605 (192.168.0.1)
     |
 192.168.0.0/24 LAN
     |
-Debian Server (192.168.0.10)
+Debian Server (192.168.0.102 primary, 192.168.0.198 proxy)
     |
     +-- Docker Stack (proxy_network)
     |   ├── Nginx Proxy Manager (80/443/81)
     |   ├── Pi-hole (53/80)
     |   ├── Homarr Dashboard (7575)
-    |   ├── Portainer (9000/8000)
     |   ├── Transmission (9091/51413)
     |   ├── Nextcloud + MariaDB + Redis
     |   ├── Syncthing (22000/21027)
+    |   ├── Minecraft Server (25565)
     |   └── Media Services (expandable)
     |
     +-- KVM/libvirt VM
-        └── Home Assistant (8123)
+    |   └── Home Assistant (8123)
+    |
+    +-- External Application
+        └── Cloudflared Public Site (via tunnel)
 ```
+
+### Cloudflared Public Application
+
+A public website/application is self-hosted via Cloudflare Tunnel (cloudflared):
+- Located in separate directory (not in `/opt/docker`)
+- Uses Cloudflared for secure public access
+- No firewall port forwarding required
+- Accessible via public domain
+
+Configuration and deployment independent from Docker stack.
 
 ### Access Patterns
 
 **Local LAN**
-- Direct IP access: `http://192.168.0.10:7575` (Homarr)
+- Direct IP access: `http://192.168.0.102:7575` (Homarr)
 - Docker internal: `http://homarr:7575` (via container DNS)
 - Hostname if configured: `http://homelab.local:7575`
 
@@ -180,6 +223,12 @@ Each Docker service has dedicated documentation:
 - **[Syncthing](./syncthing/README.md)**
   - Peer-to-peer file sync
   - Multi-device synchronization
+
+### Games & Recreation
+- **[Minecraft Server](./minecraft/README.md)**
+  - Java Edition server with persistent world
+  - Performance tuning for homelab
+  - Backup and restore
 
 ---
 
@@ -244,7 +293,7 @@ virsh shutdown home-assistant # Graceful shutdown
 ```
 
 **Access:**
-- Local: `http://192.168.0.10:8123`
+- Local: `http://192.168.0.102:8123`
 - Via NPM reverse proxy: `https://home.yourdomain.com`
 
 **Integration with Docker:**
@@ -255,7 +304,7 @@ virsh shutdown home-assistant # Graceful shutdown
 
 ## Storage Architecture
 
-### Recommended Layout
+### Current Layout
 
 ```
 /opt/docker/                           # Docker Compose configurations
@@ -264,9 +313,9 @@ virsh shutdown home-assistant # Graceful shutdown
 ├── nextcloud/                         # Nextcloud, MariaDB, Redis
 ├── media/                             # Transmission, media services
 ├── syncthing/                         # File sync
-├── minecraft/                         # Optional game server
+├── minecraft/                         # Game server
 ├── docker-compose.yml                 # Orchestration (if centralized)
-└── .env                              # Secrets (not tracked in git)
+└── .env                              # Secrets (not tracked)
 
 /mnt/media/                            # Media and large files
 ├── media/
@@ -286,13 +335,12 @@ virsh shutdown home-assistant # Graceful shutdown
 
 ### Storage Notes
 
-Current single HDD setup (12TB) is suitable for:
-- Media library (movies, TV series)
-- Nextcloud user data
-- Transmission downloads
-- System backups
+**Current:** 1x 12TB HDD (suitable for development/testing)
 
-**Future Upgrade:** Deploy RAID 1 (mirrored) or RAID 5+ for redundancy and fault tolerance. No funds allocated currently.
+**Future Upgrade:** RAID 10 with 4x HDDs for:
+- Redundancy: Survives 2x disk failures
+- Performance: Striped reads/writes
+- Capacity: Scales with growing media library
 
 Monitor disk usage:
 
@@ -328,6 +376,8 @@ cp .env.example .env
 # Edit with your settings
 nano .env
 ```
+
+Each service directory also has `.env.example` for service-specific variables.
 
 ### 3. Create Networks (One-time)
 
@@ -378,31 +428,39 @@ docker-compose logs npm -f
 │
 ├── proxy/                         # See proxy/README.md
 │   ├── docker-compose.yml
+│   ├── .env.example
 │   ├── README.md
 │   └── data/                      # (not tracked)
 │
 ├── dashboard/                     # See dashboard/README.md
 │   ├── docker-compose.yml
+│   ├── .env.example
 │   ├── README.md
 │   └── configs/                   # (not tracked)
 │
 ├── nextcloud/                     # See nextcloud/README.md
 │   ├── docker-compose.yml
 │   ├── nextcloud.env              # (not tracked)
+│   ├── .env.example
 │   ├── README.md
 │   └── db/                        # (not tracked)
 │
 ├── media/                         # See media/README.md
 │   ├── docker-compose.yml
+│   ├── .env.example
 │   ├── README.md
 │   └── transmission/              # (not tracked)
 │
 ├── syncthing/                     # See syncthing/README.md
 │   ├── docker-compose.yml
-│   └── README.md
+│   ├── .env.example
+│   ├── README.md
+│   └── config/                    # (not tracked)
 │
-├── minecraft/                     # Optional
+├── minecraft/                     # See minecraft/README.md
 │   ├── docker-compose.yml
+│   ├── .env.example
+│   ├── README.md
 │   └── world/                     # (not tracked)
 │
 └── backups/                       # (not tracked)
@@ -422,7 +480,8 @@ CONFIG_PATH=/opt/docker
 MEDIA_PATH=/mnt/media
 
 # Networking
-NPM_IP=192.168.0.197
+DOCKER_SERVER_IP=192.168.0.102
+NPM_IP=192.168.0.198
 PIHOLE_IP=192.168.0.198
 
 # Timezone
@@ -438,6 +497,11 @@ MYSQL_PASSWORD=your_nextcloud_db_password
 REDIS_PASSWORD=your_redis_password
 
 HOMARR_SECRET_KEY=your_homarr_secret_key
+
+# Optional for media services
+# RADARR_API_KEY=your_key_here
+# SONARR_API_KEY=your_key_here
+# PLEX_CLAIM=claim-token_here
 ```
 
 Each service may have a local `.env.example`. See individual READMEs for service-specific variables.
@@ -474,7 +538,7 @@ NPM provides:
 - Access control and authentication
 - Service routing
 
-Setup via NPM UI (http://192.168.0.10:81):
+Setup via NPM UI (http://192.168.0.198:81):
 1. Admin Panel > Proxy Hosts
 2. Add new proxy host
 3. Configure domain, SSL certificate, upstream service
@@ -518,6 +582,7 @@ Protected items:
 - SSH keys and fingerprints
 - Runtime data directories (config, data, logs)
 - Large media files
+- World saves and game data
 
 Allowed in Git:
 - docker-compose.yml (uses env vars, no secrets)
@@ -606,18 +671,10 @@ rsync -av --delete /mnt/media/ /mnt/external/media/
 
 ### Services Can't Communicate
 
-**Symptom:** Container A can't reach Container B
-
-**Solution:**
+Container A can't reach Container B:
 ```bash
 # Verify both on proxy_network
 docker network inspect proxy_network | grep -E '"Name"|"Containers"'
-
-# Connect if missing
-docker network connect proxy_network [container-name]
-
-# Test DNS
-docker exec [container-a] nslookup [container-b]
 
 # Test connectivity
 docker exec [container-a] ping [container-b]
@@ -625,124 +682,55 @@ docker exec [container-a] ping [container-b]
 
 ### Port Already in Use
 
-**Symptom:** `Error: bind: address already in use`
-
-**Solution:**
 ```bash
 # Find process
 lsof -i :80
-netstat -tlnp | grep :80
 
-# Kill process or change docker-compose port mapping
+# Change docker-compose port mapping or kill process
 docker-compose down && docker-compose up -d
 ```
 
 ### Out of Disk Space
 
-**Symptom:** Services fail to write; containers exit
-
-**Solution:**
 ```bash
 # Check usage
-df -h /opt/docker /mnt/media
+df -h /mnt/media
 du -sh /mnt/media/* | sort -h
 
 # Clean Docker
 docker system prune -a --volumes
-
-# Remove old logs
-docker exec [container] rm -f /var/log/*.log
-
-# Move large files to external storage
 ```
 
 ### HDD Won't Spin Down
 
-**Symptom:** `sudo hdparm -C /dev/sda` shows "active/idle" or "active"
-
-**Solution:**
 ```bash
 # Check what's accessing it
 sudo iotop -aoP | head -20
 
-# Common culprits:
-# - Transmission still seeding (stop or reduce uploads)
-# - Radarr/Sonarr scanning too frequently (check intervals)
-# - System processes (journald, cron jobs)
-
-# Force spindown for testing
-sudo hdparm -y /dev/sda
-sleep 5
-sudo hdparm -C /dev/sda  # Should show standby
+# Common culprits: Transmission seeding, frequent Radarr/Sonarr scans
+# Verify settings: Transmission > Pause All, Radarr/Sonarr intervals
 ```
 
 ### Nextcloud Database Connection Fails
 
-**Symptom:** Nextcloud container exits; "Cannot connect to database"
-
-**Solution:**
 ```bash
 # Check MariaDB
+docker-compose ps nextcloud-database
 docker-compose logs nextcloud-database
 
-# Verify credentials
-cat nextcloud.env
-
-# Restart stack properly
-docker-compose down
-sleep 2
-docker-compose up -d
-docker-compose logs -f nextcloud
+# Restart stack
+docker-compose down && sleep 2 && docker-compose up -d
 ```
 
 ### Nginx Proxy Manager Returns 502
 
-**Symptom:** "Bad Gateway" error when accessing proxied service
-
-**Solution:**
 ```bash
 # Check NPM logs
 docker-compose logs npm
 
-# Verify upstream is running
-docker ps | grep [service]
-
-# Test from NPM container
+# Verify upstream is running and reachable
 docker exec npm ping [service]
-
-# Check NPM proxy host configuration (UI, Admin Panel > Proxy Hosts)
-# Use container name (not IP) for internal routing
 ```
-
-### Home Assistant Can't Reach Docker
-
-**Symptom:** HA VM can't communicate with host or Docker containers
-
-**Solution:**
-```bash
-# From HA VM, test ping to host
-ping 192.168.0.10
-
-# Test DNS
-nslookup docker.local  # (or hardcoded IP)
-
-# Check firewall on Debian
-sudo ufw status
-sudo ufw allow from 192.168.0.0/24
-
-# If using Docker socket:
-ls -la /var/run/docker.sock
-sudo chmod 666 /var/run/docker.sock  # Temporary fix
-```
-
-### General Debugging
-
-1. Check logs: `docker-compose logs [service]`
-2. Review .env configuration
-3. Test container DNS: `docker exec [container] nslookup [host]`
-4. Check firewall: `sudo ufw status`
-5. Inspect network: `docker network inspect proxy_network`
-6. Review service README for troubleshooting
 
 ---
 
@@ -755,6 +743,7 @@ sudo chmod 666 /var/run/docker.sock  # Temporary fix
 - Syncthing: https://docs.syncthing.net/
 - Home Assistant: https://www.home-assistant.io/docs/
 - TP-Link ER605: https://www.tp-link.com/us/support/download/er605/
+- Minecraft Server: https://www.minecraft.net/en-us/download/server
 
 ---
 
