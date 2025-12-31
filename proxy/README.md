@@ -1,306 +1,383 @@
-# Proxy Services (Nginx Proxy Manager, Pi-hole, DDNS)
+# Proxy Services (Nginx Proxy Manager, Pi-hole, DDNS, OpenVPN)
 
 Back to [Main README](../README.md)
 
-This stack provides network-wide DNS resolution, ad-blocking, and reverse proxy functionality with TLS termination.
+This stack provides reverse proxying with TLS termination, network-wide DNS resolution and ad-blocking, a self-hosted OpenVPN server, and automatic DuckDNS updates.
 
 ## Services Included
 
-- **Nginx Proxy Manager (NPM)**: Reverse proxy with Let's Encrypt SSL/TLS
-- **Pi-hole**: DNS resolver with ad-blocking
-- **DDNS Updater**: Automatic DuckDNS updates for dynamic WAN IP
+- **Nginx Proxy Manager (NPM)**: Reverse proxy with Let's Encrypt SSL/TLS.
+- **Pi-hole**: DNS resolver with ad-blocking for LAN and VPN clients.
+- **OpenVPN (optional)**: Self-hosted OpenVPN server for remote access if you do not have a hardware VPN gateway.
+- **DDNS Updater**: Automatic DuckDNS updates for dynamic WAN IPs.
+
+## Docker Compose Overview
+
+`proxy/docker-compose.yml` defines four services and their networks:
+
+- Binds HTTP/HTTPS and NPM admin to a dedicated IP (`NPM_IP`).
+- Binds Pi-hole HTTP/DNS to a dedicated IP (`PIHOLE_IP`).
+- Runs OpenVPN on UDP port 1194 with persistent configuration in `openvpn-data/`.
+- Runs `ddns-updater` to keep a DuckDNS subdomain updated with the current WAN IP.
+
+```yaml
+services:
+  npm:
+    container_name: npm
+    image: 'jc21/nginx-proxy-manager:latest'
+    restart: unless-stopped
+    ports:
+      - '${NPM_IP:-192.168.0.197}:80:80'   # Public HTTP port
+      - '${NPM_IP:-192.168.0.197}:443:443' # Public HTTPS port
+      - '${NPM_IP:-192.168.0.197}:81:81'   # Admin web port
+    volumes:
+      - ${CONFIG_PATH:-/opt/docker}/proxy/data:/data
+      - ${CONFIG_PATH:-/opt/docker}/proxy/letsencrypt:/etc/letsencrypt
+    networks:
+      - pihole
+      - proxy_network
+      - apptjc_proxy_network
+      - radarr_network
+
+  pihole:
+    container_name: pihole
+    image: pihole/pihole:latest
+    ports:
+      - "${PIHOLE_IP:-192.168.0.198}:80:80/tcp"
+      - "${PIHOLE_IP:-192.168.0.198}:443:443/tcp"
+      - "${PIHOLE_IP:-192.168.0.198}:53:53/tcp"
+      - "${PIHOLE_IP:-192.168.0.198}:53:53/udp"
+    environment:
+      TZ: ${TZ:-Europe/Lisbon}
+      WEBPASSWORD: ${PIHOLE_PASSWORD}
+      FTLCONF_dns_listeningMode: 'all'
+    volumes:
+      - './etc-pihole:/etc/pihole'
+      - './etc-dnsmasq.d:/etc/dnsmasq.d'
+    restart: unless-stopped
+
+  openvpn:
+    image: kylemanna/openvpn
+    container_name: openvpn
+    ports:
+      - "1194:1194/udp"
+    volumes:
+      - ./openvpn-data:/etc/openvpn
+    cap_add:
+      - NET_ADMIN
+    restart: unless-stopped
+
+  ddns-updater:
+    image: qmcgaw/ddns-updater:latest
+    container_name: ddns-updater
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TZ:-Europe/Lisbon}
+      - PERIOD=5m
+      - UPDATE_COOLDOWN_PERIOD=5m
+      - CONFIG={"settings":[{"provider":"duckdns","domain":"${DUCKDNS_DOMAIN}","token":"${DUCKDNS_TOKEN}","ip_version":"ipv4"}]}
+    volumes:
+      - ./ddns/data:/updater/data
+    ports:
+      - 8000:8000
+    restart: unless-stopped
+    networks:
+      - proxy_network
+
+networks:
+  pihole:
+  proxy_network:
+    external: true
+  apptjc_proxy_network:
+    external: true
+  radarr_network:
+    external: true
+```
 
 ## Directory Structure
 
-```
+```text
 proxy/
 ├── docker-compose.yml
 ├── README.md
-├── data/                    # NPM config and certificates (not tracked)
-├── letsencrypt/             # Let's Encrypt certs (not tracked)
-├── etc-pihole/              # Pi-hole config (not tracked)
-├── etc-dnsmasq.d/           # Pi-hole DNS config (not tracked)
-└── ddns/data/               # DDNS data (not tracked)
+├── .env.example              # Environment variables for this stack
+├── data/                     # NPM config and certificates (not tracked)
+├── letsencrypt/              # Let's Encrypt certs (not tracked)
+├── etc-pihole/               # Pi-hole config (not tracked)
+├── etc-dnsmasq.d/            # Pi-hole DNS config (not tracked)
+└── ddns/
+    └── data/                 # DDNS updater data (not tracked)
 ```
 
 ## Environment Variables
 
+`proxy/.env.example` defines the key variables used by this stack:
+
 ```bash
-# .env
+# IPs bound on the host
 NPM_IP=192.168.0.197
 PIHOLE_IP=192.168.0.198
-PIHOLE_PASSWORD=your_strong_password
+
+# Pi-hole
+PIHOLE_PASSWORD=your_strong_password_here
+
+# DuckDNS
+DUCKDNS_DOMAIN=your-subdomain.duckdns.org
+DUCKDNS_TOKEN=your_duckdns_token_here
+
+# Timezone
+TZ=Europe/Lisbon
+
+# Paths (normally inherited from /opt/docker/.env)
+CONFIG_PATH=/opt/docker
+```
+
+- `NPM_IP` and `PIHOLE_IP` must be additional IPs assigned to your Debian host.
+- `PIHOLE_PASSWORD` sets the Pi-hole web UI admin password.
+- `DUCKDNS_DOMAIN` is your DuckDNS subdomain (without `.duckdns.org`).
+- `DUCKDNS_TOKEN` is the API token from your DuckDNS dashboard.
+
+## Step-by-Step Deployment
+
+### 1. Prepare IP Addresses on the Host
+
+Assign additional IPs (for example `192.168.0.197` and `192.168.0.198`) to your Debian host using your preferred network tool (netplan, ifupdown, or systemd-networkd). These addresses must be reachable on your LAN and not used by other devices.
+
+### 2. Create or Edit `.env`
+
+From the repository root:
+
+```bash
+cp .env.example .env        # if not already created
+vim .env                    # or nano .env
+```
+
+Ensure at least the following are set:
+
+```bash
+NPM_IP=192.168.0.197
+PIHOLE_IP=192.168.0.198
+PIHOLE_PASSWORD=change_me
 DUCKDNS_DOMAIN=your-subdomain.duckdns.org
 DUCKDNS_TOKEN=your_duckdns_token_here
 TZ=Europe/Lisbon
+CONFIG_PATH=/opt/docker
 ```
 
-## Quick Start
+### 3. Start the Stack
 
 ```bash
 cd proxy
-docker-compose up -d
+
+# One-time: ensure external networks exist
+# docker network create proxy_network
+
+# Start services
+docker compose up -d
 
 # Verify
-docker-compose ps
+docker compose ps
 ```
+
+You should now see `npm`, `pihole`, `openvpn`, and `ddns-updater` containers running.
 
 ## Access Points
 
 ### Nginx Proxy Manager
-- **Admin Panel**: http://192.168.0.197:81
-- **HTTP**: http://192.168.0.197:80 (forwards to HTTPS if configured)
-- **HTTPS**: https://192.168.0.197:443
 
-Default credentials: admin@example.com / changeme
+- **Admin Panel:** `http://192.168.0.197:81`
+- **HTTP:** `http://192.168.0.197:80`
+- **HTTPS:** `https://192.168.0.197:443`
+
+Default credentials (change on first login): `admin@example.com` / `changeme`.
 
 ### Pi-hole
-- **Dashboard**: http://192.168.0.198/admin
-- **DNS**: 192.168.0.198:53 (UDP/TCP)
 
-## Configuration
+- **Dashboard:** `http://192.168.0.198/admin`
+- **DNS:** `192.168.0.198:53` (UDP/TCP)
 
-### Nginx Proxy Manager Setup
-
-1. Access Admin Panel (port 81)
-2. Change default password
-3. Create proxy hosts for each service:
-   - Domain name
-   - Upstream service (http://service-name:port)
-   - SSL certificate (Let's Encrypt)
-   - Custom headers/caching as needed
-
-### Pi-hole Setup
-
-1. Access Dashboard (port 80)
-2. Change password: Settings > Change Password
-3. Configure upstream DNS: Settings > DNS > Upstream DNS Servers
-4. Add custom DNS records if needed
-5. Set on router as default DNS: 192.168.0.198
+Configure your router or individual devices to use `192.168.0.198` as their DNS server.
 
 ### DDNS Updater
 
-Automatically updates DuckDNS with current WAN IP.
+- **Web UI (optional):** `http://<host-ip>:8000` (if enabled in config; by default it is bound to the host).
 
-**Configuration via environment:**
-- `DUCKDNS_DOMAIN`: Your subdomain (without .duckdns.org)
-- `DUCKDNS_TOKEN`: Token from DuckDNS dashboard
+Check logs:
 
-Verify updates:
 ```bash
-# Check DDNS logs
-docker-compose logs ddns
-
-# Query DuckDNS
-dig @8.8.8.8 your-subdomain.duckdns.org
+cd proxy
+docker compose logs ddns-updater
 ```
 
-## Usage
+### OpenVPN (self-hosted)
 
-### Adding a Proxy Host (NPM UI)
+The `openvpn` service exposes UDP port `1194` on the Docker host. To use it:
 
-1. **Proxy Hosts** tab
-2. Click **Add Proxy Host**
+1. Initialize the OpenVPN PKI and server configuration in `vpn/openvpn-data` (see the `vpn` directory for detailed instructions).
+2. Forward UDP port `1194` from your router to the Docker host IP.
+3. Generate client profiles (`.ovpn` files) and distribute them to clients.
+
+If you already use a hardware VPN gateway (for example ER605) or another VPN solution, this container can be left stopped.
+
+## Nginx Proxy Manager Configuration
+
+### Initial Setup
+
+1. Open `http://192.168.0.197:81` in a browser.
+2. Log in with default credentials and immediately change the admin email and password.
+3. Optionally configure global settings (e.g., access lists, default certificates).
+
+### Adding a Proxy Host
+
+1. Go to **Proxy Hosts**.
+2. Click **Add Proxy Host**.
 3. Fill in:
-   - Domain names (space-separated)
-   - Scheme: http or https
-   - Upstream hostname/IP: service-name (uses Docker DNS)
-   - Upstream port: container's listening port
-   - Cache assets: optional
-   - Websockets support: if needed
-4. **SSL tab**
-   - Request new SSL certificate
-   - Check "Force SSL"
-   - Enable HSTS if desired
-5. **Save**
+   - **Domain Names:** e.g. `dashboard.yourdomain.com`.
+   - **Scheme:** `http` or `https`.
+   - **Forward Hostname/IP:** container name, e.g. `homarr`.
+   - **Forward Port:** container port, e.g. `7575`.
+   - Enable **Websockets Support** if the application needs it.
+4. In the **SSL** tab:
+   - Select **Request a new SSL certificate**.
+   - Enable **Force SSL**.
+   - Optionally enable **HSTS**.
+5. Save and test.
 
-### DNS Resolution
+## Pi-hole Configuration
 
-Pi-hole resolves:
-- External domains: Forwards to upstream DNS
-- Internal services: Returns container IP (if configured)
-- Blocked domains: Returns null reply (ads, trackers)
+1. Open `http://192.168.0.198/admin`.
+2. Log in using the password defined in `PIHOLE_PASSWORD`.
+3. Configure upstream DNS servers in **Settings > DNS**.
+4. Enable or disable blocklists as desired.
+5. Optionally add custom DNS records (local overrides) for internal services.
 
-**Test from host:**
+Test resolution from a host:
+
 ```bash
-nslookup homarr 192.168.0.198    # Should resolve to container IP
+nslookup homarr 192.168.0.198
 nslookup google.com 192.168.0.198
 ```
 
-### Remote Access via OpenVPN
+## DuckDNS / DDNS Updater
 
-Clients connected to TP-Link ER605 OpenVPN can access services:
+The `ddns-updater` container keeps your DuckDNS domain pointed at your current WAN IP.
 
-1. NPM forwards to internal services
-2. Pi-hole resolves DNS for VPN clients
-3. Configure ER605 to use Pi-hole as DNS (Settings > DNS)
+- It reads configuration from the `CONFIG` environment variable in `docker-compose.yml`.
+- It periodically calls the DuckDNS API using `DUCKDNS_DOMAIN` and `DUCKDNS_TOKEN`.
 
-**Example from VPN:**
+To verify it is working:
+
 ```bash
-# After connecting to ER605 VPN
-nslookup dashboard.yourdomain.com  # Pi-hole resolves
-curl https://dashboard.yourdomain.com:443  # Via NPM proxy
+cd proxy
+docker compose logs ddns-updater | tail -20
+
+# Query DNS from outside your network (or using a public resolver)
+dig your-subdomain.duckdns.org @8.8.8.8
+```
+
+If you use this DDNS name for OpenVPN or for public proxy hosts, make sure the DNS record matches your current public IP.
+
+## Maintenance
+
+### Update Containers
+
+```bash
+cd proxy
+docker compose pull
+docker compose up -d
+```
+
+### Backup Configurations
+
+```bash
+# NPM config and certificates
+sudo tar -czf npm_backup.tar.gz data/ letsencrypt/
+
+# Pi-hole configuration
+sudo tar -czf pihole_backup.tar.gz etc-pihole/ etc-dnsmasq.d/
+```
+
+### View Logs
+
+```bash
+cd proxy
+
+# All services
+docker compose logs -f
+
+# Specific service
+docker compose logs -f npm
+docker compose logs -f pihole
+docker compose logs -f ddns-updater
 ```
 
 ## Troubleshooting
 
 ### NPM returns 502 Bad Gateway
 
-**Symptom:** Upstream service unreachable
+**Symptom:** Upstream service is unreachable.
 
-**Solution:**
 ```bash
-# Check if service is running
+# Check if the service container is running
 docker ps | grep [service-name]
 
 # Test connectivity from NPM
 docker exec npm ping [service-name]
 
-# Verify upstream config in NPM UI
-# Use container name (not IP) for Docker DNS resolution
-
-# Check service logs
-docker-compose logs [service-name]
+# Inspect NPM logs
+cd proxy
+docker compose logs npm
 ```
+
+Ensure you are using the container name (not the host IP) in the NPM upstream configuration when using Docker networking.
 
 ### Pi-hole not resolving DNS
 
-**Symptom:** nslookup returns no response or timeout
-
-**Solution:**
 ```bash
-# Verify Pi-hole is running
-docker-compose ps pihole
+cd proxy
 
-# Check if listening on port 53
+# Verify Pi-hole is running
+docker compose ps pihole
+
+# Check if it is listening on port 53
 docker exec pihole netstat -tlnp | grep 53
 
-# Test locally
+# Test from a client
 nslookup google.com 192.168.0.198
-
-# Set as default DNS on router (192.168.0.1)
-# Or on specific devices
 ```
 
 ### DDNS not updating
 
-**Symptom:** DuckDNS IP doesn't match current WAN IP
-
-**Solution:**
-```bash
-# Check DDNS logs
-docker-compose logs ddns | tail -20
-
-# Verify token and domain in .env
-cat .env | grep DUCKDNS
-
-# Test manually
-curl "https://www.duckdns.org/update?domains=your-domain&token=your-token&ip="
-
-# Query result
-dig your-domain.duckdns.org
-```
-
-### Let's Encrypt certificate renewal fails
-
-**Symptom:** SSL error; certificate expired
-
-**Solution:**
-```bash
-# Check NPM logs
-docker-compose logs npm | grep -i ssl
-
-# Verify DNS can resolve domain
-nslookup your-domain.com
-
-# Ensure port 80/443 accessible from internet
-# Check ER605 port forwarding to NPM
-
-# Manually renew via NPM UI:
-# Proxy Hosts > [Host] > SSL tab > Renew
-```
-
-## Maintenance
-
-### Update containers
-
 ```bash
 cd proxy
-docker-compose pull
-docker-compose up -d
+
+# Check DDNS logs
+docker compose logs ddns-updater | tail -20
+
+# Verify DUCKDNS_* values in the environment
+cat ../.env | grep DUCKDNS
 ```
 
-### Backup configurations
+You can also test the DuckDNS API manually:
 
 ```bash
-# NPM config
-sudo tar -czf npm_backup.tar.gz data/ letsencrypt/
-
-# Pi-hole
-sudo tar -czf pihole_backup.tar.gz etc-pihole/ etc-dnsmasq.d/
-```
-
-### View logs
-
-```bash
-# All services
-docker-compose logs -f
-
-# Specific service
-docker-compose logs -f npm
-docker-compose logs -f pihole
-docker-compose logs -f ddns
-```
-
-## Advanced Configuration
-
-### Custom DNS Records (Pi-hole)
-
-Edit `etc-dnsmasq.d/custom.conf` (or via web UI):
-
-```
-address=/internal.local/192.168.0.10
-address=/minecraft.local/192.168.0.10
-```
-
-Restart Pi-hole:
-```bash
-docker-compose restart pihole
-```
-
-### NPM Custom Headers
-
-Add security headers to all proxied services:
-
-**Custom Locations tab in Proxy Host:**
-```
-Location: /
-Scheme: http
-Forward hostname: upstream-service
-Forward port: 3000
-```
-
-**Custom Headers:**
-```
-X-Frame-Options: SAMEORIGIN
-X-Content-Type-Options: nosniff
-X-XSS-Protection: 1; mode=block
-Strict-Transport-Security: max-age=31536000; includeSubDomains
+curl "https://www.duckdns.org/update?domains=your-subdomain&token=your-token&ip="
 ```
 
 ## Security Notes
 
-- Change NPM default password immediately
-- Change Pi-hole admin password
-- Store DDNS token securely (.env is not committed)
-- Enable firewall on Debian host: `sudo ufw enable`
-- Restrict NPM admin access to local network if exposed
-- Use strong certificates (Let's Encrypt is free and automatic)
-- Review Pi-hole logs for blocked queries
+- Change NPM default credentials immediately after first login.
+- Use a strong `PIHOLE_PASSWORD` and rotate it periodically.
+- Store DDNS tokens only in `.env` files (which are not committed).
+- Restrict NPM admin access to your LAN or VPN where possible.
+- Use HTTPS with Let's Encrypt for all internet-facing hosts.
+- Consider enabling a host firewall (for example `ufw`) and limiting exposed ports to what you actually need.
 
 ---
 
-For more info:
-- [Nginx Proxy Manager Docs](https://nginxproxymanager.com/)
+For more information:
+- [Nginx Proxy Manager Documentation](https://nginxproxymanager.com/)
 - [Pi-hole Documentation](https://docs.pi-hole.net/)
 - [DuckDNS](https://www.duckdns.org/)
+- [DDNS-Updater Documentation](https://github.com/qdm12/ddns-updater)
