@@ -1,10 +1,14 @@
-vpn/openvpn-data
-# Environment variables and secrets
+# Updated .gitignore including all data directories and .env files
 
+# OpenVPN data
+vpn/openvpn-data
+
+# Environment variables and secrets
 .env
 .env.local
 .env.*.local
 *.env
+.env.example  # Keep example tracked, but local .env ignored
 env.sh
 
 # Database files
@@ -40,37 +44,66 @@ logs/
 *.log
 state/
 
-# Docker volumes (mounted data)
+# Docker volumes
 volumes/
 
 # Service-specific data (not tracked)
+
+# Proxy
 proxy/data/
 proxy/letsencrypt/
 proxy/etc-pihole/
 proxy/etc-dnsmasq.d/
 proxy/ddns/data/
+proxy/*.env
 
+# Dashboard
 dashboard/configs/
 dashboard/data/
 dashboard/icons/
 dashboard/imgs/
 dashboard/beszel_data/
+dashboard/beszel_agent_data/
+dashboard/beszel_socket/
+dashboard/beszel_agent_data/
+dashboard/*.env
 
+# IT Tools
+ittools/config/
+ittools/ssl/
+ittools/wazuh-docker/
+ittools/*.env
+
+# Nextcloud
 nextcloud/config/
 nextcloud/data/
 nextcloud/db/
 nextcloud/nextcloud.env
 nextcloud/old/
+nextcloud/*.env
 
+# Media
 media/transmission/
 media/config/
+media/overseer/config/
+media/plex/config/
+media/immich/
+media/*.env
 
+# Syncthing
 syncthing/config/
+syncthing/*.env
 
+# Minecraft
 minecraft/world/
 minecraft/server.properties
+minecraft/*.env
 
-# Backup files
+# Cloud (future/new)
+cloud/*/
+cloud/*.env
+
+# Backups
 backups/
 *.tar
 *.tar.gz
@@ -83,7 +116,7 @@ backups/
 *.img
 *.dmg
 
-# Local development
+# Local development & IDE
 .vscode/
 .idea/
 *.swp
@@ -103,19 +136,7 @@ __pycache__/
 .venv/
 venv/
 
-# IDE
-.vscode
-.idea
-.sublime-project
-.sublime-workspace
-
-# OS specific
-.DS_Store
-Thumbs.db
-.AppleDouble
-.LSOverride
-
-# Docker compose overrides (local only)
+# Docker compose overrides
 docker-compose.override.yml
 
 # Temporary files
@@ -126,11 +147,6 @@ temp/
 # PID files
 *.pid
 
-# Lock files (keep some, ignore others based on project needs)
+# Logs
 npm-debug.log
 yarn-error.log
-
-# Systemd override files
-/etc/rc.local.override
-
-
