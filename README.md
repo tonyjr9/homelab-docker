@@ -30,10 +30,13 @@ Production-ready personal homelab built with Docker Compose for media, networkin
 
 | Component | Model | Specifications |
 |-----------|-------|---|
-| **Host OS** | Debian 13 | I7-8700H, 40GB RAM, 1x 256GB NVMe SSD |
+| **Host OS** | Debian 13 | Bare-metal, or Debian VM on Proxmox/other supervisor; I7-8700H, 40GB RAM, 1x 256GB NVMe SSD |
 | **Storage** | HDD Array | Currently 1x 12TB (future: RAID 10 with 4x HDDs) |
 | **Hypervisor** | KVM/libvirt (virt-manager) | Hosts Home Assistant VM (2 vCPU, 4GB RAM) |
 | **Router/Gateway** | TP-Link ER605 | OpenVPN server, DDNS, port forwarding, Gigabit LAN |
+
+> The stack assumes a Debian server environment. This can be a bare-metal Debian install or a Debian VM (for example on Proxmox or another hypervisor). Home Assistant runs in a separate KVM/libvirt VM managed by virt‑manager, but any VM host providing a Debian guest works. 
+
 
 **Storage Expansion Plan:**
 Current single 12TB HDD will be replaced with RAID 10 configuration (4x HDDs) for redundancy and performance. Provides fault tolerance with 2x disk failure resistance.
@@ -112,9 +115,9 @@ cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
 | Service | IP Address | Purpose |
 |---------|-----------|----------|
 | **Debian Server** | 192.168.0.102 | Docker services, internal routing |
-| **Nginx Proxy Manager** | 192.168.0.198 | Reverse proxy, TLS termination, external access |
+| **Nginx Proxy Manager** | 192.168.0.197 | Reverse proxy, TLS termination, external access |
 | **Pi-hole** | 192.168.0.198 | DNS resolution, ad-blocking (same as NPM) |
-| **Home Assistant VM** | Dynamic | KVM/libvirt managed, accessible via proxy |
+| **Home Assistant VM** | 192.168.0.103 | KVM/libvirt managed, accessible via proxy |
 
 **Network configuration:**
 ```bash
@@ -241,7 +244,7 @@ Each Docker service has dedicated documentation:
 
 ```bash
 # Docker and container runtime
-sudo apt install docker.io docker-compose
+sudo apt install docker.io docker compose
 
 # System utilities
 sudo apt install htop iotop curl wget git
@@ -315,7 +318,7 @@ virsh shutdown home-assistant # Graceful shutdown
 ├── media/                             # Transmission, media services
 ├── syncthing/                         # File sync
 ├── minecraft/                         # Game server
-├── docker-compose.yml                 # Orchestration (if centralized)
+├── docker compose.yml                 # Orchestration (if centralized)
 └── .env                              # Secrets (not tracked)
 
 /mnt/media/                            # Media and large files
@@ -356,10 +359,13 @@ df -h /mnt/media                      # Overall free space
 
 ### Prerequisites
 
-- Debian 12+ with Docker & Docker Compose
-- 2+ CPU cores, 4+ GB RAM minimum
+- Debian 12+ server (bare-metal or Debian VM on Proxmox/other hypervisor) with Docker & Docker Compose
+- 2+ CPU cores, 4+ GB RAM minimum 
 - Network connectivity to TP-Link ER605 gateway
 - Sufficient storage: 50GB+ for services, additional for media
+
+**Performance Note:** These minimum specs support core services (dashboards, file sync, light downloads). For demanding workloads like real-time media transcoding (Plex/Jellyfin), heavy Minecraft multiplayer, or intensive automation, use 4+ CPU cores and 8+ GB RAM to prevent bottlenecks.
+
 
 ### 1. Clone Repository
 
@@ -375,7 +381,7 @@ cd /opt/docker
 cp .env.example .env
 
 # Edit with your settings
-nano .env
+vim .env
 ```
 
 Each service directory also has `.env.example` for service-specific variables.
@@ -390,20 +396,20 @@ docker network create proxy_network
 
 ```bash
 # 1. Networking (gateway for all services)
-cd proxy && docker-compose up -d && cd ..
+cd proxy && docker compose up -d && cd ..
 
 # 2. Dashboard and monitoring
-cd dashboard && docker-compose up -d && cd ..
+cd dashboard && docker compose up -d && cd ..
 
 # 3. Core services
-cd nextcloud && docker-compose up -d && cd ..
-cd syncthing && docker-compose up -d && cd ..
+cd nextcloud && docker compose up -d && cd ..
+cd syncthing && docker compose up -d && cd ..
 
 # 4. Optional media services
-cd media && docker-compose up -d && cd ..
+cd media && docker compose up -d && cd ..
 
 # 5. Optional Minecraft
-cd minecraft && docker-compose up -d && cd ..
+cd minecraft && docker compose up -d && cd ..
 ```
 
 ### 5. Verify
@@ -413,7 +419,7 @@ cd minecraft && docker-compose up -d && cd ..
 docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}"
 
 # Check specific logs
-docker-compose logs npm -f
+docker compose logs npm -f
 ```
 
 ---
@@ -524,41 +530,51 @@ manage  # Then press 41
 ├── manage.sh                      # Management script
 │
 ├── proxy/                         # See proxy/README.md
-│   ├── docker-compose.yml
+│   ├── docker compose.yml
 │   ├── .env.example
 │   ├── README.md
 │   └── data/                      # (not tracked)
 │
 ├── dashboard/                     # See dashboard/README.md
-│   ├── docker-compose.yml
+│   ├── docker compose.yml
 │   ├── .env.example
 │   ├── README.md
 │   └── configs/                   # (not tracked)
 │
-├── nextcloud/                     # See nextcloud/README.md
+├── ittools/                       # Self-hosted IT tools (if enabled)
 │   ├── docker-compose.yml
+│   ├── .env.example
+│   └── README.md (optional)
+│
+├── nextcloud/                     # See nextcloud/README.md
+│   ├── docker compose.yml
 │   ├── nextcloud.env              # (not tracked)
 │   ├── .env.example
 │   ├── README.md
 │   └── db/                        # (not tracked)
 │
 ├── media/                         # See media/README.md
-│   ├── docker-compose.yml
+│   ├── docker compose.yml
 │   ├── .env.example
 │   ├── README.md
 │   └── transmission/              # (not tracked)
 │
 ├── syncthing/                     # See syncthing/README.md
-│   ├── docker-compose.yml
+│   ├── docker compose.yml
 │   ├── .env.example
 │   ├── README.md
 │   └── config/                    # (not tracked)
 │
 ├── minecraft/                     # See minecraft/README.md
-│   ├── docker-compose.yml
+│   ├── docker compose.yml
 │   ├── .env.example
 │   ├── README.md
 │   └── world/                     # (not tracked)
+├── vpn/                           # Optional OpenVPN client/server config for TP-Link ER605
+│   └── debian/                    # Debian-based configuration and client files
+│   └── backups/                   # (not tracked)
+│
+│
 │
 └── backups/                       # (not tracked)
 ```
@@ -578,7 +594,7 @@ MEDIA_PATH=/mnt/media
 
 # Networking
 DOCKER_SERVER_IP=192.168.0.102
-NPM_IP=192.168.0.198
+NPM_IP=192.168.0.197
 PIHOLE_IP=192.168.0.198
 
 # Timezone
@@ -607,14 +623,29 @@ Each service may have a local `.env.example`. See individual READMEs for service
 
 ## Networking & Security
 
-### Remote Access via OpenVPN (TP-Link ER605)
+
+### Self-Hosted OpenVPN Server (Optional)
+
+The `./vpn` directory deploys a Docker-based OpenVPN server for remote LAN access. Use this if you lack a dedicated VPN gateway (like TP-Link ER605 hardware).
+
+- **Deployment:** `cd vpn && docker compose up -d` (after one-time initialization).
+- **Port:** Forward 1194/UDP on your router (can be other port but needs to be the same as the docker compose).
+- **Details:** See dedicated setup in `./vpn` (client configs generated post-deploy).
+
+If using hardware VPN or alternatives (Tailscale/WireGuard), ignore this directory.
+ 
+### Remote Access via OpenVPN (TP-Link ER605 or other gateway/router)
 
 **Configuration on ER605:**
-1. Login to ER605 web interface (192.168.0.1)
+1. Login to router web interface (192.168.0.1)
 2. Navigate to VPN > OpenVPN Server
 3. Enable OpenVPN, generate certificates
-4. Forward port 1194 (UDP) to ER605 WAN
-5. Create DuckDNS subdomain pointing to your WAN IP
+4. For ER605 no need for port forwarding, check your gateway info 
+5. Change the file to remote public-ip 1194
+
+
+**Notes** 
+Ideally you should use remote duckdns-domain 1194, or other port, for that you need the ddns updater (also this will help if you have a dynamic changing IP address, most ISP's use that) config for ddns-updater is under proxy directory.
 
 **Connect from remote client:**
 ```bash
@@ -622,8 +653,8 @@ Each service may have a local `.env.example`. See individual READMEs for service
 openvpn --config your-config.ovpn
 
 # Once connected, access services:
-# http://10.0.0.2:7575 (Homarr)
-# http://10.0.0.2:8123 (Home Assistant)
+# http://homelab-ip:7575 (Homarr)
+# http://ha-vm-ip:8123 (Home Assistant)
 # etc.
 ```
 
@@ -657,13 +688,13 @@ Access: `http://192.168.0.198/admin`
 - Use strong, unique passwords for each service
 - Enable TLS/SSL for all public-facing services
 - Restrict SSH access to authorized IPs
-- Regularly update: `docker-compose pull && docker-compose up -d`
+- Regularly update: `docker compose pull && docker compose up -d`
 - Monitor logs for suspicious activity
 - Use VPN for remote access (don't expose directly to internet)
 - Review firewall rules: `sudo ufw status`
 
 **Don't:**
-- Hardcode secrets in docker-compose.yml
+- Hardcode secrets in docker compose.yml
 - Expose services without authentication
 - Use default passwords
 - Mount Docker socket without ACL consideration
@@ -682,7 +713,7 @@ Protected items:
 - World saves and game data
 
 Allowed in Git:
-- docker-compose.yml (uses env vars, no secrets)
+- docker compose.yml (uses env vars, no secrets)
 - .env.example (template)
 - READMEs and documentation
 - Prometheus/monitoring configs
@@ -698,16 +729,16 @@ Allowed in Git:
 docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}"
 
 # View logs
-docker-compose logs -f [service]     # Follow logs
+docker compose logs -f [service]     # Follow logs
 docker logs [container-name] -n 50   # Last 50 lines
 
 # Control services
-docker-compose restart [service]
-docker-compose stop [service]
-docker-compose up -d [service]
+docker compose restart [service]
+docker compose stop [service]
+docker compose up -d [service]
 
 # Update all images
-docker-compose pull && docker-compose up -d
+docker compose pull && docker compose up -d
 
 # Prune unused resources
 docker system prune -a --volumes
@@ -783,8 +814,8 @@ docker exec [container-a] ping [container-b]
 # Find process
 lsof -i :80
 
-# Change docker-compose port mapping or kill process
-docker-compose down && docker-compose up -d
+# Change docker compose port mapping or kill process
+docker compose down && docker compose up -d
 ```
 
 ### Out of Disk Space
@@ -812,18 +843,18 @@ sudo iotop -aoP | head -20
 
 ```bash
 # Check MariaDB
-docker-compose ps nextcloud-database
-docker-compose logs nextcloud-database
+docker compose ps nextcloud-database
+docker compose logs nextcloud-database
 
 # Restart stack
-docker-compose down && sleep 2 && docker-compose up -d
+docker compose down && sleep 2 && docker compose up -d
 ```
 
 ### Nginx Proxy Manager Returns 502
 
 ```bash
 # Check NPM logs
-docker-compose logs npm
+docker compose logs npm
 
 # Verify upstream is running and reachable
 docker exec npm ping [service]

@@ -140,12 +140,12 @@ view_logs() {
 
 update_all() {
     print_header "Updating All Containers"
-    cd $PROXY_DIR && docker compose pull && docker-compose up -d && cd - > /dev/null
-    cd $DASHBOARD_DIR && docker compose pull && docker-compose up -d && cd - > /dev/null
-    cd $NEXTCLOUD_DIR && docker compose pull && docker-compose up -d && cd - > /dev/null
-    cd $MEDIA_DIR && docker compose pull && docker-compose up -d && cd - > /dev/null
-    cd $SYNCTHING_DIR && docker compose pull && docker-compose up -d && cd - > /dev/null
-    cd $MINECRAFT_DIR && docker compose pull && docker-compose up -d && cd - > /dev/null
+    cd $PROXY_DIR && docker compose pull && docker compose up -d && cd - > /dev/null
+    cd $DASHBOARD_DIR && docker compose pull && docker compose up -d && cd - > /dev/null
+    cd $NEXTCLOUD_DIR && docker compose pull && docker compose up -d && cd - > /dev/null
+    cd $MEDIA_DIR && docker compose pull && docker compose up -d && cd - > /dev/null
+    cd $SYNCTHING_DIR && docker compose pull && docker compose up -d && cd - > /dev/null
+    cd $MINECRAFT_DIR && docker compose pull && docker compose up -d && cd - > /dev/null
     print_success "All containers updated"
     echo ""
     echo "Press Enter to continue..."

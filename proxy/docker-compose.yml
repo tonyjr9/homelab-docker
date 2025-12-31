@@ -35,6 +35,18 @@ services:
       - './etc-dnsmasq.d:/etc/dnsmasq.d'
     restart: unless-stopped
 
+
+  openvpn:
+    image: kylemanna/openvpn
+    container_name: openvpn
+    ports:
+      - "1194:1194/udp"
+    volumes:
+      - ./openvpn-data:/etc/openvpn
+    cap_add:
+      - NET_ADMIN
+    restart: unless-stopped
+
   ddns-updater:
     image: qmcgaw/ddns-updater:latest
     container_name: ddns-updater
