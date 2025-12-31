@@ -31,7 +31,7 @@ Production-ready personal homelab built with Docker Compose for media, networkin
 | Component | Model | Specifications |
 |-----------|-------|---|
 | **Host OS** | Debian 13 | Bare-metal or Debian VM on Proxmox/other hypervisor; i7-8700H, 40GB RAM, 1x 256GB NVMe SSD |
-| **Storage** | HDD Array | Currently 1x 12TB (future: RAID 10 with 4x HDDs) |
+| **Storage** | HDD Array | Currently 1x 12TB (future: RAID 10 or RAID 5 with 4x HDDs) |
 | **Hypervisor** | KVM/libvirt (virt-manager) | Hosts Home Assistant VM (2 vCPU, 4GB RAM) |
 | **Router/Gateway** | TP-Link ER605 | OpenVPN server, DDNS, port forwarding, Gigabit LAN |
 
@@ -349,9 +349,9 @@ virsh shutdown home-assistant # Graceful shutdown
 
 **Future upgrade:** RAID array with 4x HDDs for:
 - Redundancy: Survives certain 2-disk failure scenarios depending on raid config.
-- Performance: Striped reads/writes.
+- Performance: Improved reads/writes.
 - Capacity: Scales with a growing media library.
-- Best choices are RAID 10 or RAID 5
+
 
 Monitor disk usage:
 
@@ -570,9 +570,34 @@ Each service may have a local `.env.example`. See individual READMEs for service
 
 ## Networking & Security
 
-### UFW
+### UFW (host firewall)
 
-you can use ufw for better protection of open ports
+Use UFW to restrict which ports on the Debian host are reachable from your LAN and from the internet.
+
+#### 1. Install and enable UFW
+
+```bash
+sudo apt install ufw
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+```
+
+#### 2. Allow core management access
+
+```bash
+# SSH (adjust port if you changed it)
+sudo ufw allow 22/tcp
+
+# OpenVPN from the internet (if you use the host)
+sudo ufw allow 1194/udp
+```
+
+#### 3. Allow LAN access to services
+
+```bash
+sudo ufw allow PORT # For each service port
+
+```
 
 ### Self-Hosted OpenVPN Server (Optional)
 

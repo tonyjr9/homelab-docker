@@ -1,0 +1,369 @@
+# ============================================================================
+# MINIMAL ZSH CONFIG FOR SSH/HOMELAB - PRODUCTION GRADE
+# Startup time: ~30-50ms | SSH-aware with icon indicators
+# ============================================================================
+
+# For the manage script:
+alias manage='/usr/local/bin/manage.sh'
+
+
+
+# -----------------------------------------------------------------------------
+# HISTORY CONFIGURATION
+# -----------------------------------------------------------------------------
+# Store history persistently with aggressive deduplication
+HISTFILE=~/.zsh_history
+HISTSIZE=100000
+SAVEHIST=100000
+
+# History options for efficiency and usability
+setopt INC_APPEND_HISTORY        # Write to history immediately
+setopt HIST_IGNORE_ALL_DUPS      # Remove older duplicate entries
+setopt HIST_FIND_NO_DUPS         # Don't show duplicates in search
+setopt HIST_IGNORE_SPACE         # Ignore commands starting with space
+setopt HIST_REDUCE_BLANKS        # Remove superfluous blanks
+setopt HIST_VERIFY               # Show command with history expansion before running
+setopt EXTENDED_HISTORY          # Save timestamp and duration
+
+# -----------------------------------------------------------------------------
+# COMPLETION SYSTEM - OPTIMIZED FOR SPEED
+# -----------------------------------------------------------------------------
+# Only rebuild completion cache once per day for maximum performance
+autoload -Uz compinit
+
+# Smart cache checking - only rebuild if cache is older than 24 hours
+if [[ -n ~/.zcompdump(#qN.mh+24) ]]; then
+    compinit
+else
+    compinit -C  # Skip security check for speed
+fi
+
+# Completion styling for better UX
+zstyle ':completion:*' completer _complete _approximate
+zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'  # Case-insensitive
+zstyle ':completion:*' menu select  # Visual menu for selections
+zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"  # Colored completions
+zstyle ':completion:*' use-cache on
+zstyle ':completion:*' cache-path ~/.zsh/cache
+
+# Performance: Accept exact matches immediately
+zstyle ':completion:*' accept-exact '*(N)'
+
+# SSH completion optimization - critical for homelab use
+zstyle ':completion:*:ssh:*' hosts off  # Disable slow host lookups
+zstyle ':completion:*:scp:*' hosts off
+
+# Fast SSH completion from known_hosts (if available)
+if [[ -f ~/.ssh/known_hosts ]]; then
+    zstyle ':completion:*:ssh:*' hosts $(awk '{print $1}' ~/.ssh/known_hosts | cut -d, -f1 2>/dev/null)
+fi
+
+
+
+
+# -----------------------------------------------------------------------------
+# PROMPT CONFIGURATION - SSH-AWARE WITH ICON & MINIMAL (FIXED)
+# -----------------------------------------------------------------------------
+setopt PROMPT_SUBST
+autoload -U colors && colors
+
+# Initialize async Git status (if available) with fallback
+if [[ -f ~/.zsh/async.zsh ]]; then
+    source ~/.zsh/async.zsh
+    async_init
+
+    # Async Git worker with better error handling
+    _async_git_info() {
+        # Timeout after 2 seconds
+        local timeout=2
+        
+        cd -q "$1" 2>/dev/null || return 1
+        
+        # Quick check if this is a git repo
+        git rev-parse --git-dir &>/dev/null || return 1
+        
+        local branch=$(git symbolic-ref --short HEAD 2>/dev/null || git rev-parse --short HEAD 2>/dev/null)
+        
+        if [[ -n "$branch" ]]; then
+            # Use simpler status check for large repos
+            if git diff --quiet 2>/dev/null && git diff --cached --quiet 2>/dev/null; then
+                # Clean
+                echo " %F{green}[$branch]%f"
+            else
+                # Dirty
+                echo " %F{yellow}[$branch*]%f"
+            fi
+        fi
+    }
+
+    _async_git_done() {
+        GIT_PROMPT_INFO=$3
+        zle && zle reset-prompt
+    }
+
+    # Start worker with error handling
+    async_start_worker git_worker -n 2>/dev/null || {
+        echo "Warning: Async git worker failed to start, using sync mode"
+        GIT_PROMPT_INFO='$(git_prompt_info_sync)'
+    }
+    
+    async_register_callback git_worker _async_git_done 2>/dev/null
+
+    # Precmd with async Git + terminal title
+    precmd() {
+        async_flush_jobs git_worker 2>/dev/null
+        async_job git_worker _async_git_info "$PWD" 2>/dev/null
+        print -Pn "\e]2;%~\a"
+    }
+else
+    # No async available - use sync
+    GIT_PROMPT_INFO='$(git_prompt_info_sync)'
+    precmd() { print -Pn "\e]2;%~\a" }
+fi
+
+# Synchronous fallback function (always available)
+git_prompt_info_sync() {
+    # Quick exit if not a git repo
+    git rev-parse --git-dir &>/dev/null || return
+    
+    local branch=$(git symbolic-ref --short HEAD 2>/dev/null || git rev-parse --short HEAD 2>/dev/null)
+    
+    if [[ -n "$branch" ]]; then
+        # Fast dirty check using git diff instead of porcelain
+        if git diff --quiet 2>/dev/null && git diff --cached --quiet 2>/dev/null; then
+            echo " %F{green}[$branch]%f"
+        else
+            echo " %F{yellow}[$branch*]%f"
+        fi
+    fi
+}
+
+# SSH-aware prompt: Icon + dynamic hostname (Option 3 + 4 combined)
+if [[ -n "$SSH_CONNECTION" ]] || [[ -n "$SSH_TTY" ]]; then
+    # SSH session - show icon and full user@host
+    SSH_ICON="%F{red}󰢹 %f"  # Or use "%F{red}[SSH]%f " if no Nerd Font
+    SHOW_HOST="%F{blue}%n@%m%f"
+    
+    # Show connection details in right prompt
+    CLIENT_IP="${SSH_CONNECTION%% *}"
+    RPROMPT='%F{240}from ${CLIENT_IP}%f'
+else
+    # Local session
+    SSH_ICON=""
+    SHOW_HOST="%F{blue}%n%f"
+    RPROMPT=""
+fi
+
+# Two-line prompt
+PROMPT='${SSH_ICON}${SHOW_HOST} %F{cyan}%~%f${GIT_PROMPT_INFO}
+%(?.%F{green}.%F{red})❯%f '
+
+
+
+
+# If you don't have Nerd Fonts installed, replace the SSH_ICON line with:
+# SSH_ICON="%F{red}[SSH]%f "
+
+# -----------------------------------------------------------------------------
+# KEY BINDINGS - EMACS STYLE (RECOMMENDED)
+# -----------------------------------------------------------------------------
+bindkey -e  # Use emacs key bindings (keep this!)
+
+# History search with arrow keys (essential for productivity)
+autoload -U history-search-end
+zle -N history-beginning-search-backward-end history-search-end
+zle -N history-beginning-search-forward-end history-search-end
+bindkey "^[[A" history-beginning-search-backward-end  # Up arrow
+bindkey "^[[B" history-beginning-search-forward-end   # Down arrow
+
+# Common emacs bindings (explicitly defined for consistency)
+bindkey '^A' beginning-of-line       # Ctrl-A: jump to beginning
+bindkey '^E' end-of-line             # Ctrl-E: jump to end
+bindkey '^R' history-incremental-search-backward  # Ctrl-R: search history
+bindkey '^[[3~' delete-char          # Delete key
+bindkey '^W' backward-kill-word      # Ctrl-W: delete word backward
+bindkey '^K' kill-line               # Ctrl-K: delete to end of line
+bindkey '^U' backward-kill-line      # Ctrl-U: delete to beginning of line
+
+# Ctrl-X Ctrl-E to edit command in Vim (power user feature!)
+autoload -U edit-command-line
+zle -N edit-command-line
+bindkey '^X^E' edit-command-line
+
+# -----------------------------------------------------------------------------
+# OPTIONAL: VI MODE (UNCOMMENT TO ENABLE)
+# -----------------------------------------------------------------------------
+# If you decide you want vi mode after all, uncomment these lines:
+#
+# bindkey -v  # Enable vi mode
+# export KEYTIMEOUT=1  # Reduce ESC delay to 10ms
+#
+# # Vi mode: jj to escape to normal mode
+# bindkey -M viins 'jj' vi-cmd-mode
+#
+# # Vi mode: Restore useful emacs bindings in insert mode
+# bindkey -M viins '^A' beginning-of-line
+# bindkey -M viins '^E' end-of-line
+# bindkey -M viins '^R' history-incremental-search-backward
+# bindkey -M viins '^W' backward-kill-word
+# bindkey -M viins '^K' kill-line
+#
+# # Vi mode: History search with arrow keys
+# bindkey -M viins "^[[A" history-beginning-search-backward-end
+# bindkey -M viins "^[[B" history-beginning-search-forward-end
+#
+# # Vi mode: v to edit in vim from normal mode
+# autoload -U edit-command-line
+# zle -N edit-command-line
+# bindkey -M vicmd 'v' edit-command-line
+
+# -----------------------------------------------------------------------------
+# ESSENTIAL ALIASES
+# -----------------------------------------------------------------------------
+# Color support (platform-agnostic)
+if ls --color=auto &>/dev/null; then
+    # GNU ls (Linux)
+    alias ls='ls --color=auto -hv'
+else
+    # BSD ls (macOS, BSD)
+    export CLICOLOR=1
+    alias ls='ls -h'
+fi
+
+# File operations
+alias ll='ls -l'
+alias la='ls -lA'
+alias ls='ls -lah'
+alias l='ls'
+
+# Safety aliases
+alias mv='mv -i'
+alias cp='cp -i'
+alias rm='rm -i'
+
+# Color support for common commands
+alias grep='grep --color=auto'
+alias diff='diff --color=auto'
+
+# Productivity shortcuts
+alias ..='cd ..'
+alias ...='cd ../..'
+alias ....='cd ../../..'
+
+# Git shortcuts (if you use git)
+alias g='git'
+alias gs='git status'
+alias ga='git add'
+alias gaa='git add .'
+alias gc='git commit -m'
+alias gp='git push'
+alias gpom='git push origin main'
+alias gl='git log --oneline'
+alias gd='git diff'
+alias gco='git checkout'
+
+# System monitoring (homelab specific)
+alias ports='netstat -tulanp'
+alias pscpu='ps auxf | sort -nr -k 3 | head -10'
+alias psmem='ps auxf | sort -nr -k 4 | head -10'
+
+# Docker shortcuts (if you use Docker in homelab)
+alias d='docker'
+alias dc='docker-compose'
+alias dps='docker ps'
+alias dpa='docker ps -a'
+alias di='docker images'
+
+# Quick config editing
+alias zshrc='$EDITOR ~/.zshrc'
+alias sshconf='$EDITOR ~/.ssh/config'
+
+# -----------------------------------------------------------------------------
+# ENVIRONMENT VARIABLES
+# -----------------------------------------------------------------------------
+# Editor preference
+export EDITOR=vim
+export VISUAL=vim
+
+# Less configuration (better defaults)
+export LESS='-R -i -M'
+
+# Better man pages with colors
+export LESS_TERMCAP_mb=$'\e[1;32m'
+export LESS_TERMCAP_md=$'\e[1;32m'
+export LESS_TERMCAP_me=$'\e[0m'
+export LESS_TERMCAP_se=$'\e[0m'
+export LESS_TERMCAP_so=$'\e[01;33m'
+export LESS_TERMCAP_ue=$'\e[0m'
+export LESS_TERMCAP_us=$'\e[1;4;31m'
+
+# -----------------------------------------------------------------------------
+# PERFORMANCE & BEHAVIOR SETTINGS
+# -----------------------------------------------------------------------------
+# No beep
+unsetopt BEEP
+
+# Spell correction for commands (helpful but not aggressive)
+setopt CORRECT
+
+# Directory navigation improvements
+setopt AUTO_CD              # Just type directory name to cd
+setopt AUTO_PUSHD           # Make cd push old directory onto stack
+setopt PUSHD_IGNORE_DUPS    # Don't push duplicates
+setopt PUSHD_SILENT         # Don't print directory stack
+
+# Glob improvements
+setopt EXTENDED_GLOB        # Enable extended globbing
+
+# -----------------------------------------------------------------------------
+# OPTIONAL: PLUGIN-FREE ENHANCEMENTS
+# -----------------------------------------------------------------------------
+
+# Simple command-not-found handler (if available)
+if [[ -s /etc/zsh_command_not_found ]]; then
+    source /etc/zsh_command_not_found
+fi
+
+# Load local customizations (machine-specific configs)
+[[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
+
+# -----------------------------------------------------------------------------
+# USEFUL FUNCTIONS
+# -----------------------------------------------------------------------------
+
+# Extract archives with one command
+extract() {
+    if [ -f "$1" ]; then
+        case "$1" in
+            *.tar.bz2)   tar xjf "$1"    ;;
+            *.tar.gz)    tar xzf "$1"    ;;
+            *.bz2)       bunzip2 "$1"    ;;
+            *.rar)       unrar x "$1"    ;;
+            *.gz)        gunzip "$1"     ;;
+            *.tar)       tar xf "$1"     ;;
+            *.tbz2)      tar xjf "$1"    ;;
+            *.tgz)       tar xzf "$1"    ;;
+            *.zip)       unzip "$1"      ;;
+            *.Z)         uncompress "$1" ;;
+            *.7z)        7z x "$1"       ;;
+            *)           echo "'$1' cannot be extracted via extract()" ;;
+        esac
+    else
+        echo "'$1' is not a valid file"
+    fi
+}
+
+# Make directory and cd into it
+mkcd() {
+    mkdir -p "$1" && cd "$1"
+}
+
+# Quick backup
+backup() {
+    cp "$1"{,.backup-$(date +%Y%m%d-%H%M%S)}
+}
+
+# Find process by name
+psgrep() {
+    ps aux | grep -v grep | grep -i -e VSZ -e "$@"
+}

@@ -372,7 +372,8 @@ curl "https://www.duckdns.org/update?domains=your-subdomain&token=your-token&ip=
 - Store DDNS tokens only in `.env` files (which are not committed).
 - Restrict NPM admin access to your LAN or VPN where possible.
 - Use HTTPS with Let's Encrypt for all internet-facing hosts.
-- Consider enabling a host firewall (for example `ufw`) and limiting exposed ports to what you actually need.
+- Consider enabling a host firewall such as UFW on the Debian server and only allowing the ports you actually need (for example 22/tcp for SSH, 80/443/81 for NPM from LAN, 53 for Pi-hole DNS, and 1194/udp for OpenVPN). See the UFW section in the main README for example rules.
+
 
 ---
 
