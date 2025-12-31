@@ -31,7 +31,8 @@ services:
       - 8080:80
     volumes:
       # - /mnt/media/nextcloud/root:/var/www/html
-      - ./config:/config
+      - ./config:/config  
+      # - /mnt/media/nextcloud/nextcloud/config:/config
       - /mnt/media/nextcloud/data:/data
     environment:
       - PUID=1000

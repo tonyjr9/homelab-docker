@@ -1,4 +1,6 @@
+vpn/openvpn-data
 # Environment variables and secrets
+
 .env
 .env.local
 .env.*.local
@@ -130,3 +132,5 @@ yarn-error.log
 
 # Systemd override files
 /etc/rc.local.override
+
+

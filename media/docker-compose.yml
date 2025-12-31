@@ -29,7 +29,7 @@ services:
       - TRANSMISSION_SCRIPT_TORRENT_DONE_ENABLED=true
       - TRANSMISSION_SCRIPT_TORRENT_DONE_FILENAME=/config/scripts/torrent-done.sh
     volumes:
-      - /opt/docker/transmission/config:/config
+      - /opt/docker/media/transmission/config:/config
       - /mnt/media/media/transmission/downloads:/downloads
 #      - /mnt/media/media/transmission/watch:/watch
     restart: unless-stopped

@@ -91,12 +91,12 @@ show_menu() {
 # Docker service functions
 start_all() {
     print_header "Starting All Services"
-    cd $PROXY_DIR && docker-compose up -d && cd - > /dev/null
-    cd $DASHBOARD_DIR && docker-compose up -d && cd - > /dev/null
-    cd $NEXTCLOUD_DIR && docker-compose up -d && cd - > /dev/null
-    cd $MEDIA_DIR && docker-compose up -d && cd - > /dev/null
-    cd $SYNCTHING_DIR && docker-compose up -d && cd - > /dev/null
-    cd $MINECRAFT_DIR && docker-compose up -d && cd - > /dev/null
+    cd $PROXY_DIR && docker compose up -d && cd - > /dev/null
+    cd $DASHBOARD_DIR && docker compose up -d && cd - > /dev/null
+    cd $NEXTCLOUD_DIR && docker compose up -d && cd - > /dev/null
+    cd $MEDIA_DIR && docker compose up -d && cd - > /dev/null
+    cd $SYNCTHING_DIR && docker compose up -d && cd - > /dev/null
+    cd $MINECRAFT_DIR && docker compose up -d && cd - > /dev/null
     print_success "All services started"
     echo ""
     echo "Press Enter to continue..."
@@ -105,12 +105,12 @@ start_all() {
 
 stop_all() {
     print_header "Stopping All Services"
-    cd $PROXY_DIR && docker-compose down && cd - > /dev/null
-    cd $DASHBOARD_DIR && docker-compose down && cd - > /dev/null
-    cd $NEXTCLOUD_DIR && docker-compose down && cd - > /dev/null
-    cd $MEDIA_DIR && docker-compose down && cd - > /dev/null
-    cd $SYNCTHING_DIR && docker-compose down && cd - > /dev/null
-    cd $MINECRAFT_DIR && docker-compose down && cd - > /dev/null
+    cd $PROXY_DIR && docker compose down && cd - > /dev/null
+    cd $DASHBOARD_DIR && docker compose down && cd - > /dev/null
+    cd $NEXTCLOUD_DIR && docker compose down && cd - > /dev/null
+    cd $MEDIA_DIR && docker compose down && cd - > /dev/null
+    cd $SYNCTHING_DIR && docker compose down && cd - > /dev/null
+    cd $MINECRAFT_DIR && docker compose down && cd - > /dev/null
     print_success "All services stopped"
     echo ""
     echo "Press Enter to continue..."
@@ -140,12 +140,12 @@ view_logs() {
 
 update_all() {
     print_header "Updating All Containers"
-    cd $PROXY_DIR && docker-compose pull && docker-compose up -d && cd - > /dev/null
-    cd $DASHBOARD_DIR && docker-compose pull && docker-compose up -d && cd - > /dev/null
-    cd $NEXTCLOUD_DIR && docker-compose pull && docker-compose up -d && cd - > /dev/null
-    cd $MEDIA_DIR && docker-compose pull && docker-compose up -d && cd - > /dev/null
-    cd $SYNCTHING_DIR && docker-compose pull && docker-compose up -d && cd - > /dev/null
-    cd $MINECRAFT_DIR && docker-compose pull && docker-compose up -d && cd - > /dev/null
+    cd $PROXY_DIR && docker compose pull && docker-compose up -d && cd - > /dev/null
+    cd $DASHBOARD_DIR && docker compose pull && docker-compose up -d && cd - > /dev/null
+    cd $NEXTCLOUD_DIR && docker compose pull && docker-compose up -d && cd - > /dev/null
+    cd $MEDIA_DIR && docker compose pull && docker-compose up -d && cd - > /dev/null
+    cd $SYNCTHING_DIR && docker compose pull && docker-compose up -d && cd - > /dev/null
+    cd $MINECRAFT_DIR && docker compose pull && docker-compose up -d && cd - > /dev/null
     print_success "All containers updated"
     echo ""
     echo "Press Enter to continue..."
@@ -172,12 +172,12 @@ manage_service() {
     read choice
     
     case $choice in
-        1) cd $service_dir && docker-compose up -d && cd - > /dev/null ;;
-        2) cd $service_dir && docker-compose down && cd - > /dev/null ;;
-        3) cd $service_dir && docker-compose restart && cd - > /dev/null ;;
-        4) cd $service_dir && docker-compose ps && cd - > /dev/null ;;
-        5) cd $service_dir && docker-compose logs -f ;;
-        6) cd $service_dir && docker-compose logs --tail 50 && cd - > /dev/null ;;
+        1) cd $service_dir && docker compose up -d && cd - > /dev/null ;;
+        2) cd $service_dir && docker compose down && cd - > /dev/null ;;
+        3) cd $service_dir && docker compose restart && cd - > /dev/null ;;
+        4) cd $service_dir && docker compose ps && cd - > /dev/null ;;
+        5) cd $service_dir && docker compose logs -f ;;
+        6) cd $service_dir && docker compose logs --tail 50 && cd - > /dev/null ;;
         0) return ;;
     esac
     
@@ -394,7 +394,7 @@ check_updates() {
     
     for dir in "$PROXY_DIR" "$DASHBOARD_DIR" "$NEXTCLOUD_DIR" "$MEDIA_DIR" "$SYNCTHING_DIR" "$MINECRAFT_DIR"; do
         echo -e "${BLUE}Checking $(basename $dir)...${NC}"
-        cd $dir && docker-compose pull 2>&1 | grep -i "up to date\|downloaded" && cd - > /dev/null
+        cd $dir && docker compose pull 2>&1 | grep -i "up to date\|downloaded" && cd - > /dev/null
     done
     
     echo ""
