@@ -55,7 +55,7 @@ hdparm -S 120 /dev/sda
 
 # CPU power saving (scales dynamically based on load)
 for cpu in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
-    echo "powersave" > "$cpu" 2>/dev/null
+    echo "schedutil" > "$cpu" 2>/dev/null
 done
 
 exit 0
@@ -72,11 +72,16 @@ exit 0
 Transmission seeding and Radarr/Sonarr constant polling were reduced:
 
 1. **Transmission** – Stop seeding at ratio 0.1 and pause if idle > 5 minutes.
-2. **Radarr/Sonarr** – Check for finished downloads every 60+ minutes (instead of 1 minute).
-3. **RSS Polling** – Disabled (manual content addition preferred).
-4. **Webhook Notifications** – Trigger scans only on download completion.
+2. **Radarr/Sonarr** – Check for finished downloads every 120+ minutes (instead of 1 minute).
+3. **RSS Polling** – Disabled (manual rss refresh preferred, when you add a film or series it rss polls once so this will only impact series that are not present in your indexer of choice, I preffer to do the recheck manually as for me there is no need of refrefreshing all the time).
+4. **Webhook Notifications** – Trigger scans only on download completion, that garentees that the media is moved to plex directory asap.
+
+
+Notes:
+* Webhook is not working very well right now will update the repo as soon as I solve it 
 
 Result: The HDD sleeps ~90% of the time, and the system is virtually silent at idle.
+In my case the HDD I use is seagate enterprise level, like WD nas hdd's they are designed to be running 24/7 and most times they don't allow spindown. Sp the spindown only works for some types of hdd.
 
 #### System Monitoring
 
@@ -115,20 +120,20 @@ cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
 | Service | IP Address | Purpose |
 |---------|-----------|----------|
 | **Debian Server** | 192.168.0.102 | Docker services, internal routing |
-| **Nginx Proxy Manager** | 192.168.0.197 | Reverse proxy, TLS termination, external access |
+| **Nginx Proxy Manager** | 192.168.0.197 | Reverse proxy |
 | **Pi-hole** | 192.168.0.198 | DNS resolution, ad-blocking |
 | **Home Assistant VM** | 192.168.0.103 | KVM/libvirt managed, accessible via proxy |
 
 **Network configuration (example):**
 ```bash
-# Multiple IPs configured on the primary network interface
+# Multiple IPs configured on the primary network interface as its needed because services like nextcloud, pihole and nginx need to use 80 as internal exposed port and to run all at once they need to be in different IP's
 # Allows service-specific routing and isolation
-# Managed via netplan, ifupdown, or systemd-networkd (not shown here)
+# Managed via NetworkManager 
 ```
 
 **TP-Link ER605 gateway:**
 - LAN IP: 192.168.0.1
-- OpenVPN server network: 10.0.0.0/24 (remote access)
+- OpenVPN server network: 192.168.X.0/24 (IP pool of connected devices)(remote access)
 - DDNS: vpn.duckdns.org
 
 ---
@@ -163,7 +168,7 @@ Debian Server (192.168.0.102 primary, 192.168.0.197/198 for proxy/DNS)
     +-- KVM/libvirt VM
     |   └── Home Assistant (8123)
     |
-    +-- External application
+    +-- External CRUD application
         └── Cloudflared public site (via tunnel)
 ```
 
@@ -171,7 +176,7 @@ Debian Server (192.168.0.102 primary, 192.168.0.197/198 for proxy/DNS)
 
 A public website or application is self-hosted via Cloudflare Tunnel (cloudflared):
 - Located in a separate directory (not in `/opt/docker`).
-- Uses Cloudflared for secure public access.
+- Uses Cloudflare tunnels for secure public access.
 - No firewall port forwarding required.
 - Accessible via a public domain.
 
@@ -180,19 +185,21 @@ Configuration and deployment are independent from the Docker stack.
 ### Access Patterns
 
 **Local LAN**
+- Using domain name, and nginx: `https://subdomain.domain.duckdns.org`
+Example: `https://dashboard.domain.duckdns.org` (I use a free domain from duck dns, but I don't expose that to the open web with port forwarding)
 - Direct IP: `http://192.168.0.102:7575` (Homarr).
-- Docker internal: `http://homarr:7575` (via container DNS).
+- Docker internal: `http://homarr:7575` (via container DNS, doens't work on browser).
 - Hostname (if configured): `http://homelab.local:7575`.
 
 **Remote VPN (hardware gateway)**
 - Connect to TP-Link ER605 OpenVPN (`vpn.duckdns.org`).
-- Client receives an IP in the `10.0.0.0/24` range.
-- Access via homelab IPs: `http://homelab-ip:7575` (Homarr), `http://ha-vm-ip:8123` (Home Assistant), etc.
+- Access via homelab IPs: `http://homelab-ip:7575` (Homarr), `https://subdomain.domain`
 
 **Public domains (optional)**
 - Exposed via Nginx Proxy Manager reverse proxy.
 - Secured with Let's Encrypt TLS certificates.
 - Example: `https://dashboard.yourdomain.com`.
+- The most secure way to do this is purchase a cloudflare domain and use cloudflare tunnels that don't need port forwarding and that way you don't even need nginx as cloudflare manages the proxy for you
 
 ---
 
@@ -220,8 +227,8 @@ Each Docker service has dedicated documentation:
 ### Media & Downloads
 - **[Media Services (Transmission + expandable)](./media/README.md)**
   - Torrent downloading with event-driven scanning.
-  - Ready for Sonarr, Radarr, Plex, Immich.
-  - Webhook integration for automatic imports.
+  - Ready for arr stack, Plex and transmission.
+  - Webhook integration for automatic imports (in progress).
 
 ### File Synchronization
 - **[Syncthing](./syncthing/README.md)**
@@ -242,9 +249,10 @@ Each Docker service has dedicated documentation:
 
 #### Required Packages
 
+
+[Install docker](https://docs.docker.com/engine/install/debian/#install-using-the-repository)
+
 ```bash
-# Docker and container runtime
-sudo apt install docker.io docker compose
 
 # System utilities
 sudo apt install htop iotop curl wget git
@@ -255,8 +263,6 @@ sudo apt install qemu-kvm libvirt-daemon-system virt-manager
 # Power management (optional, for advanced scaling)
 sudo apt install cpufrequtils
 
-# Optional: OpenVPN client (to test VPN connectivity)
-sudo apt install openvpn
 ```
 
 #### User Permissions
@@ -341,10 +347,11 @@ virsh shutdown home-assistant # Graceful shutdown
 
 **Current:** 1x 12TB HDD (suitable for development/testing).
 
-**Future upgrade:** RAID 10 with 4x HDDs for:
-- Redundancy: Survives certain 2-disk failure scenarios.
+**Future upgrade:** RAID array with 4x HDDs for:
+- Redundancy: Survives certain 2-disk failure scenarios depending on raid config.
 - Performance: Striped reads/writes.
 - Capacity: Scales with a growing media library.
+- Best choices are RAID 10 or RAID 5
 
 Monitor disk usage:
 
@@ -424,7 +431,7 @@ docker compose logs npm -f
 ---
 
 ## Management Script
-
+(In development)
 A comprehensive interactive management script is provided for easy homelab administration.
 
 ### Features
@@ -446,7 +453,7 @@ sudo chmod +x /usr/local/bin/manage.sh
 
 # Create convenient alias
 echo "alias manage='sudo /usr/local/bin/manage.sh'" >> ~/.bashrc
-source ~/.bashrc
+source ~/.bashrc # or ~/.zshrc
 ```
 
 ### Usage
@@ -562,6 +569,10 @@ Each service may have a local `.env.example`. See individual READMEs for service
 ---
 
 ## Networking & Security
+
+### UFW
+
+you can use ufw for better protection of open ports
 
 ### Self-Hosted OpenVPN Server (Optional)
 
