@@ -30,16 +30,16 @@ Production-ready personal homelab built with Docker Compose for media, networkin
 
 | Component | Model | Specifications |
 |-----------|-------|---|
-| **Host OS** | Debian 13 | Bare-metal, or Debian VM on Proxmox/other supervisor; I7-8700H, 40GB RAM, 1x 256GB NVMe SSD |
+| **Host OS** | Debian 13 | Bare-metal or Debian VM on Proxmox/other hypervisor; i7-8700H, 40GB RAM, 1x 256GB NVMe SSD |
 | **Storage** | HDD Array | Currently 1x 12TB (future: RAID 10 with 4x HDDs) |
 | **Hypervisor** | KVM/libvirt (virt-manager) | Hosts Home Assistant VM (2 vCPU, 4GB RAM) |
 | **Router/Gateway** | TP-Link ER605 | OpenVPN server, DDNS, port forwarding, Gigabit LAN |
 
-> The stack assumes a Debian server environment. This can be a bare-metal Debian install or a Debian VM (for example on Proxmox or another hypervisor). Home Assistant runs in a separate KVM/libvirt VM managed by virt‑manager, but any VM host providing a Debian guest works. 
+> The stack assumes a Debian server environment. This can be a bare-metal Debian install or a Debian VM (for example on Proxmox or another hypervisor). Home Assistant runs in a separate KVM/libvirt VM managed by virt-manager, but any VM host providing a Debian guest works.
 
 
 **Storage Expansion Plan:**
-Current single 12TB HDD will be replaced with RAID 10 configuration (4x HDDs) for redundancy and performance. Provides fault tolerance with 2x disk failure resistance.
+Current single 12TB HDD will be replaced with RAID 10 (4x HDDs) for redundancy and performance. This provides fault tolerance with up to 2x disk failures.
 
 ### System-Level Configuration
 
@@ -50,12 +50,12 @@ File: `/etc/rc.local`
 ```bash
 #!/bin/bash
 
-# HDD Spindown after 10 minutes
+# HDD spindown after 10 minutes
 hdparm -S 120 /dev/sda
 
-# CPU Power Saving (scales dynamically based on load)
+# CPU power saving (scales dynamically based on load)
 for cpu in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor; do
-    echo "powersave" > $cpu 2>/dev/null
+    echo "powersave" > "$cpu" 2>/dev/null
 done
 
 exit 0
@@ -64,23 +64,23 @@ exit 0
 **Behavior:**
 - HDD automatically spins down after 10 minutes of inactivity
 - CPU scales from 800 MHz (idle) to 4.6 GHz (under load)
-- Reduces power consumption by 10-15W at idle
-- No performance impact on loaded workloads (Minecraft, downloads, etc.)
+- Reduces power consumption by 10–15 W at idle
+- No noticeable performance impact under load (Minecraft, downloads, etc.)
 
 #### Service Spindown Optimization
 
-Transmission seeding and Radarr/Sonarr constant polling were eliminated:
+Transmission seeding and Radarr/Sonarr constant polling were reduced:
 
-1. **Transmission** - Set to stop seeding at ratio 0.1 and pause if idle > 5 minutes
-2. **Radarr/Sonarr** - Check for finished downloads every 60+ minutes (instead of 1 minute)
-3. **RSS Polling** - Disabled (manual content addition preferred)
-4. **Webhook Notifications** - Implemented to trigger scans only on download completion
+1. **Transmission** – Stop seeding at ratio 0.1 and pause if idle > 5 minutes.
+2. **Radarr/Sonarr** – Check for finished downloads every 60+ minutes (instead of 1 minute).
+3. **RSS Polling** – Disabled (manual content addition preferred).
+4. **Webhook Notifications** – Trigger scans only on download completion.
 
-Result: HDD sleeps ~90% of the time, system is virtually silent at idle.
+Result: The HDD sleeps ~90% of the time, and the system is virtually silent at idle.
 
 #### System Monitoring
 
-Monitor disk activity in real-time:
+Monitor disk activity in real time:
 
 ```bash
 # Install if needed
@@ -110,25 +110,25 @@ cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
 
 ### IP Address Management
 
-**Multiple IPs configured via network tool for service isolation:**
+**Multiple IPs configured on the host for service isolation:**
 
 | Service | IP Address | Purpose |
 |---------|-----------|----------|
 | **Debian Server** | 192.168.0.102 | Docker services, internal routing |
 | **Nginx Proxy Manager** | 192.168.0.197 | Reverse proxy, TLS termination, external access |
-| **Pi-hole** | 192.168.0.198 | DNS resolution, ad-blocking (same as NPM) |
+| **Pi-hole** | 192.168.0.198 | DNS resolution, ad-blocking |
 | **Home Assistant VM** | 192.168.0.103 | KVM/libvirt managed, accessible via proxy |
 
-**Network configuration:**
+**Network configuration (example):**
 ```bash
-# Multiple IPs configured on primary network interface
-# Allows service-specific routing and load distribution
-# Managed via network tool (netplan, ifupdown, or systemd-networkd)
+# Multiple IPs configured on the primary network interface
+# Allows service-specific routing and isolation
+# Managed via netplan, ifupdown, or systemd-networkd (not shown here)
 ```
 
-**TP-Link ER605 Gateway:**
+**TP-Link ER605 gateway:**
 - LAN IP: 192.168.0.1
-- OpenVPN Server: 10.0.0.0/24 (remote access)
+- OpenVPN server network: 10.0.0.0/24 (remote access)
 - DDNS: vpn.duckdns.org
 
 ---
@@ -143,12 +143,12 @@ INTERNET (Tor / Remote Access)
     | OpenVPN (port 1194)
     |
 TP-Link ER605 (192.168.0.1)
-    | OpenVPN Server: 10.0.0.0/24
-    | DDNS Gateway: vpn.duckdns.org
+    | OpenVPN server: 10.0.0.0/24
+    | DDNS gateway: vpn.duckdns.org
     |
 192.168.0.0/24 LAN
     |
-Debian Server (192.168.0.102 primary, 192.168.0.198 proxy)
+Debian Server (192.168.0.102 primary, 192.168.0.197/198 for proxy/DNS)
     |
     +-- Docker Stack (proxy_network)
     |   ├── Nginx Proxy Manager (80/443/81)
@@ -158,41 +158,41 @@ Debian Server (192.168.0.102 primary, 192.168.0.198 proxy)
     |   ├── Nextcloud + MariaDB + Redis
     |   ├── Syncthing (22000/21027)
     |   ├── Minecraft Server (25565)
-    |   └── Media Services (expandable)
+    |   └── Media services (expandable)
     |
     +-- KVM/libvirt VM
     |   └── Home Assistant (8123)
     |
-    +-- External Application
-        └── Cloudflared Public Site (via tunnel)
+    +-- External application
+        └── Cloudflared public site (via tunnel)
 ```
 
 ### Cloudflared Public Application
 
-A public website/application is self-hosted via Cloudflare Tunnel (cloudflared):
-- Located in separate directory (not in `/opt/docker`)
-- Uses Cloudflared for secure public access
-- No firewall port forwarding required
-- Accessible via public domain
+A public website or application is self-hosted via Cloudflare Tunnel (cloudflared):
+- Located in a separate directory (not in `/opt/docker`).
+- Uses Cloudflared for secure public access.
+- No firewall port forwarding required.
+- Accessible via a public domain.
 
-Configuration and deployment independent from Docker stack.
+Configuration and deployment are independent from the Docker stack.
 
 ### Access Patterns
 
 **Local LAN**
-- Direct IP access: `http://192.168.0.102:7575` (Homarr)
-- Docker internal: `http://homarr:7575` (via container DNS)
-- Hostname if configured: `http://homelab.local:7575`
+- Direct IP: `http://192.168.0.102:7575` (Homarr).
+- Docker internal: `http://homarr:7575` (via container DNS).
+- Hostname (if configured): `http://homelab.local:7575`.
 
-**Remote VPN**
-- Connect to TP-Link ER605 OpenVPN (vpn.duckdns.org)
-- Receive VPN IP in 10.0.0.0/24 range
-- Access via VPN IP: `http://10.0.0.2:7575`
+**Remote VPN (hardware gateway)**
+- Connect to TP-Link ER605 OpenVPN (`vpn.duckdns.org`).
+- Client receives an IP in the `10.0.0.0/24` range.
+- Access via homelab IPs: `http://homelab-ip:7575` (Homarr), `http://ha-vm-ip:8123` (Home Assistant), etc.
 
-**Public Domains (Optional)**
-- Via Nginx Proxy Manager reverse proxy
-- Let's Encrypt TLS certificates
-- Example: `https://dashboard.yourdomain.com`
+**Public domains (optional)**
+- Exposed via Nginx Proxy Manager reverse proxy.
+- Secured with Let's Encrypt TLS certificates.
+- Example: `https://dashboard.yourdomain.com`.
 
 ---
 
@@ -202,37 +202,37 @@ Each Docker service has dedicated documentation:
 
 ### Core Networking
 - **[Nginx Proxy Manager, Pi-hole, DDNS](./proxy/README.md)**
-  - Reverse proxy with TLS termination
-  - DNS resolution and ad-blocking
-  - Dynamic DNS updates
+  - Reverse proxy with TLS termination.
+  - DNS resolution and ad-blocking.
+  - Dynamic DNS updates.
 
 ### Dashboards & Monitoring
 - **[Homarr Dashboard & Beszel](./dashboard/README.md)**
-  - Unified service dashboard
-  - System resource monitoring
+  - Unified service dashboard.
+  - System resource monitoring.
 
 ### Cloud Storage
 - **[Nextcloud Stack (Nextcloud + MariaDB + Redis)](./nextcloud/README.md)**
-  - Self-hosted file sync and sharing
-  - Database and caching layer
-  - Backup and restore procedures
+  - Self-hosted file sync and sharing.
+  - Database and caching layer.
+  - Backup and restore procedures.
 
 ### Media & Downloads
 - **[Media Services (Transmission + expandable)](./media/README.md)**
-  - Torrent downloading with event-driven scanning
-  - Ready for Sonarr, Radarr, Plex, Immich
-  - Webhook integration for automatic imports
+  - Torrent downloading with event-driven scanning.
+  - Ready for Sonarr, Radarr, Plex, Immich.
+  - Webhook integration for automatic imports.
 
 ### File Synchronization
 - **[Syncthing](./syncthing/README.md)**
-  - Peer-to-peer file sync
-  - Multi-device synchronization
+  - Peer-to-peer file sync.
+  - Multi-device synchronization.
 
 ### Games & Recreation
 - **[Minecraft Server](./minecraft/README.md)**
-  - Java Edition server with persistent world
-  - Performance tuning for homelab
-  - Backup and restore
+  - Java Edition server with a persistent world.
+  - Performance tuning for homelab.
+  - Backup and restore.
 
 ---
 
@@ -262,12 +262,12 @@ sudo apt install openvpn
 #### User Permissions
 
 ```bash
-# Add user to docker group (avoid sudo for docker commands)
-sudo usermod -aG docker $USER
+# Add user to docker group (avoid sudo for Docker commands)
+sudo usermod -aG docker "$USER"
 newgrp docker
 
 # Add user to libvirt group (for virt-manager)
-sudo usermod -aG libvirt $USER
+sudo usermod -aG libvirt "$USER"
 ```
 
 #### Time Synchronization
@@ -297,12 +297,12 @@ virsh shutdown home-assistant # Graceful shutdown
 ```
 
 **Access:**
-- Local: `http://192.168.0.102:8123`
-- Via NPM reverse proxy: `https://home.yourdomain.com`
+- Local: `http://192.168.0.102:8123`.
+- Via NPM reverse proxy: `https://home.yourdomain.com`.
 
 **Integration with Docker:**
-- Home Assistant can discover Docker containers via socket access
-- Configure in Home Assistant UI: Settings > Integrations > Docker
+- Home Assistant can discover Docker containers via the Docker integration.
+- Configure in Home Assistant UI: Settings > Integrations > Docker.
 
 ---
 
@@ -312,14 +312,14 @@ virsh shutdown home-assistant # Graceful shutdown
 
 ```
 /opt/docker/                           # Docker Compose configurations
-├── proxy/                             # Nginx, Pi-hole, DDNS
+├── proxy/                             # Nginx, Pi-hole, DDNS, OpenVPN, DDNS updater
 ├── dashboard/                         # Homarr, Beszel
 ├── nextcloud/                         # Nextcloud, MariaDB, Redis
 ├── media/                             # Transmission, media services
 ├── syncthing/                         # File sync
 ├── minecraft/                         # Game server
-├── docker compose.yml                 # Orchestration (if centralized)
-└── .env                              # Secrets (not tracked)
+├── docker-compose.yml                 # Optional root-level orchestration (if used)
+└── .env                               # Global secrets/config (not tracked)
 
 /mnt/media/                            # Media and large files
 ├── media/
@@ -331,7 +331,7 @@ virsh shutdown home-assistant # Graceful shutdown
 │       │   └── incomplete/            # In-progress downloads
 │       └── watch/                     # Auto-import folder
 ├── nextcloud/
-│   ├── config/                        # NC configuration
+│   ├── config/                        # Nextcloud configuration
 │   ├── data/                          # User files
 │   └── db/                            # MariaDB data
 └── backups/                           # Backup destination
@@ -339,12 +339,12 @@ virsh shutdown home-assistant # Graceful shutdown
 
 ### Storage Notes
 
-**Current:** 1x 12TB HDD (suitable for development/testing)
+**Current:** 1x 12TB HDD (suitable for development/testing).
 
-**Future Upgrade:** RAID 10 with 4x HDDs for:
-- Redundancy: Survives 2x disk failures
-- Performance: Striped reads/writes
-- Capacity: Scales with growing media library
+**Future upgrade:** RAID 10 with 4x HDDs for:
+- Redundancy: Survives certain 2-disk failure scenarios.
+- Performance: Striped reads/writes.
+- Capacity: Scales with a growing media library.
 
 Monitor disk usage:
 
@@ -359,13 +359,12 @@ df -h /mnt/media                      # Overall free space
 
 ### Prerequisites
 
-- Debian 12+ server (bare-metal or Debian VM on Proxmox/other hypervisor) with Docker & Docker Compose
-- 2+ CPU cores, 4+ GB RAM minimum 
-- Network connectivity to TP-Link ER605 gateway
-- Sufficient storage: 50GB+ for services, additional for media
+- Debian 12+ server (bare-metal or Debian VM on Proxmox/other hypervisor) with Docker and the Docker Compose plugin.
+- 2+ CPU cores, 4+ GB RAM minimum.
+- Network connectivity to your home router or gateway (TP-Link ER605 in this example).
+- Sufficient storage: 50 GB+ for services, additional capacity for media.
 
-**Performance Note:** These minimum specs support core services (dashboards, file sync, light downloads). For demanding workloads like real-time media transcoding (Plex/Jellyfin), heavy Minecraft multiplayer, or intensive automation, use 4+ CPU cores and 8+ GB RAM to prevent bottlenecks.
-
+**Performance note:** These minimum specs support core services (dashboards, file sync, light downloads). For demanding workloads such as real-time media transcoding (Plex/Jellyfin), heavy Minecraft multiplayer, or intensive automation, consider 4+ CPU cores and 8+ GB RAM to avoid performance bottlenecks.
 
 ### 1. Clone Repository
 
@@ -386,13 +385,13 @@ vim .env
 
 Each service directory also has `.env.example` for service-specific variables.
 
-### 3. Create Networks (One-time)
+### 3. Create Networks (one time)
 
 ```bash
 docker network create proxy_network
 ```
 
-### 4. Start Services (Recommended Order)
+### 4. Start Services (recommended order)
 
 ```bash
 # 1. Networking (gateway for all services)
@@ -416,7 +415,7 @@ cd minecraft && docker compose up -d && cd ..
 
 ```bash
 # Check all containers running
-docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}"
+docker ps --format "table {{.Names}}	{{.Image}}	{{.Status}}	{{.Ports}}"
 
 # Check specific logs
 docker compose logs npm -f
@@ -430,11 +429,11 @@ A comprehensive interactive management script is provided for easy homelab admin
 
 ### Features
 
-- **Docker Services**: Start/stop/restart all services or individual stacks
-- **System Monitoring**: HDD status, disk I/O, container resources, network connections
-- **Power Management**: Force HDD spindown, check CPU governor, view power config
-- **Maintenance**: Clean Docker, backup Nextcloud/Minecraft, check for updates
-- **Logs & Debugging**: View logs, test connectivity, check webhooks
+- **Docker services**: Start, stop, and restart all services or individual stacks.
+- **System monitoring**: HDD status, disk I/O, container resources, network connections.
+- **Power management**: Force HDD spindown, check CPU governor, view power configuration.
+- **Maintenance**: Clean Docker, back up Nextcloud/Minecraft, check for image updates.
+- **Logs and debugging**: View logs, test connectivity, check webhooks.
 
 ### Installation
 
@@ -457,65 +456,7 @@ source ~/.bashrc
 manage
 ```
 
-**Menu Options:**
-
-```
-[Docker Services]
-1) Start all services
-2) Stop all services
-3) Restart all services
-4) Service status
-5) View logs
-6) Update all containers
-
-[Individual Services]
-10) Proxy (NPM, Pi-hole, DDNS)
-11) Dashboard (Homarr, Beszel)
-12) Nextcloud stack
-13) Media services
-14) Syncthing
-15) Minecraft
-
-[System Monitoring]
-20) HDD status & spindown info
-21) Disk I/O activity (iotop)
-22) Container resource usage
-23) Disk space usage
-24) Network connections
-25) System overview
-
-[Power Management]
-30) Force HDD spindown now
-31) Check CPU governor
-32) Show power management config
-
-[Maintenance]
-40) Clean Docker (prune unused)
-41) Backup Nextcloud database
-42) Backup Minecraft world
-43) Check for updates
-
-[Logs & Debugging]
-50) Transmission webhook log
-51) View service logs (choose)
-52) Check network connectivity
-```
-
-**Quick Examples:**
-
-```bash
-# Check HDD status
-manage  # Then press 20
-
-# Monitor disk I/O
-manage  # Then press 21
-
-# Restart all services
-manage  # Then press 3
-
-# Backup Nextcloud
-manage  # Then press 41
-```
+Refer to the menu description in this README for available options.
 
 ---
 
@@ -530,13 +471,13 @@ manage  # Then press 41
 ├── manage.sh                      # Management script
 │
 ├── proxy/                         # See proxy/README.md
-│   ├── docker compose.yml
+│   ├── docker-compose.yml
 │   ├── .env.example
 │   ├── README.md
 │   └── data/                      # (not tracked)
 │
 ├── dashboard/                     # See dashboard/README.md
-│   ├── docker compose.yml
+│   ├── docker-compose.yml
 │   ├── .env.example
 │   ├── README.md
 │   └── configs/                   # (not tracked)
@@ -547,34 +488,33 @@ manage  # Then press 41
 │   └── README.md (optional)
 │
 ├── nextcloud/                     # See nextcloud/README.md
-│   ├── docker compose.yml
+│   ├── docker-compose.yml
 │   ├── nextcloud.env              # (not tracked)
 │   ├── .env.example
 │   ├── README.md
 │   └── db/                        # (not tracked)
 │
 ├── media/                         # See media/README.md
-│   ├── docker compose.yml
+│   ├── docker-compose.yml
 │   ├── .env.example
 │   ├── README.md
 │   └── transmission/              # (not tracked)
 │
 ├── syncthing/                     # See syncthing/README.md
-│   ├── docker compose.yml
+│   ├── docker-compose.yml
 │   ├── .env.example
 │   ├── README.md
 │   └── config/                    # (not tracked)
 │
 ├── minecraft/                     # See minecraft/README.md
-│   ├── docker compose.yml
+│   ├── docker-compose.yml
 │   ├── .env.example
 │   ├── README.md
 │   └── world/                     # (not tracked)
-├── vpn/                           # Optional OpenVPN client/server config for TP-Link ER605
-│   └── debian/                    # Debian-based configuration and client files
-│   └── backups/                   # (not tracked)
-│
-│
+├── vpn/                           # Optional self-hosted OpenVPN server
+│   ├── docker-compose.yml
+│   ├── openvpn-data/              # PKI and server configuration (not tracked)
+│   └── README.md (recommended)
 │
 └── backups/                       # (not tracked)
 ```
@@ -623,100 +563,107 @@ Each service may have a local `.env.example`. See individual READMEs for service
 
 ## Networking & Security
 
-
 ### Self-Hosted OpenVPN Server (Optional)
 
-The `./vpn` directory deploys a Docker-based OpenVPN server for remote LAN access. Use this if you lack a dedicated VPN gateway (like TP-Link ER605 hardware).
+The `./vpn` directory deploys a Docker-based OpenVPN server for remote LAN access. Use this if you do not have a dedicated VPN gateway device (such as a TP-Link ER605).
 
-- **Deployment:** `cd vpn && docker compose up -d` (after one-time initialization).
-- **Port:** Forward 1194/UDP on your router (can be other port but needs to be the same as the docker compose).
-- **Details:** See dedicated setup in `./vpn` (client configs generated post-deploy).
+- **Deployment:** `cd vpn && docker compose up -d` (after one-time PKI initialization).
+- **Port:** Forward UDP port 1194 on your router to the Docker host IP and port defined in `vpn/docker-compose.yml`. If you change the external port, update the OpenVPN client configuration to match.
+- **Details:** See the `vpn` directory for server initialization commands and client configuration generation.
 
-If using hardware VPN or alternatives (Tailscale/WireGuard), ignore this directory.
+If you are already using a hardware VPN gateway or another VPN solution (for example Tailscale or WireGuard), this directory can be ignored.
  
 ### Remote Access via OpenVPN (TP-Link ER605 or other gateway/router)
 
-**Configuration on ER605:**
-1. Login to router web interface (192.168.0.1)
-2. Navigate to VPN > OpenVPN Server
-3. Enable OpenVPN, generate certificates
-4. For ER605 no need for port forwarding, check your gateway info 
-5. Change the file to remote public-ip 1194
+**Configuration on ER605 (example):**
+1. Log in to the router web interface (default: `http://192.168.0.1`).
+2. Navigate to **VPN > OpenVPN Server**.
+3. Enable OpenVPN and generate certificates.
+4. Configure the OpenVPN server to listen on UDP port 1194 (or another port of your choice).
+5. If the ER605 is behind another router or NAT, forward the chosen UDP port from the upstream router to the ER605.
+6. Download the generated `.ovpn` client configuration file from the ER605.
 
+**Client remote line:**
+- If you use a static public IP, set the `remote` line in the `.ovpn` file to:
+  - `remote your-public-ip 1194`
+- If you use a dynamic public IP, configure DDNS (for example DuckDNS via the DDNS updater in the proxy stack) and set:
+  - `remote your-subdomain.duckdns.org 1194`
 
-**Notes** 
-Ideally you should use remote duckdns-domain 1194, or other port, for that you need the ddns updater (also this will help if you have a dynamic changing IP address, most ISP's use that) config for ddns-updater is under proxy directory.
+The port number in the `remote` line must match the public UDP port you exposed on the router.
 
-**Connect from remote client:**
+**Connect from a remote client:**
 ```bash
-# Download .ovpn file from ER605
+# Use the .ovpn file exported from the ER605
 openvpn --config your-config.ovpn
 
-# Once connected, access services:
-# http://homelab-ip:7575 (Homarr)
-# http://ha-vm-ip:8123 (Home Assistant)
+# Once connected, access services using internal IPs:
+# http://homelab-ip:7575   (Homarr)
+# http://ha-vm-ip:8123     (Home Assistant)
 # etc.
 ```
 
+**DDNS note:**
+Using a DDNS name (for example `your-subdomain.duckdns.org`) instead of a raw IP helps when your ISP assigns a dynamic address. The `ddns-updater` container in the proxy stack keeps the DDNS record in sync with your current WAN IP.
+
 ### Reverse Proxy (Nginx Proxy Manager)
 
-NPM provides:
-- TLS/SSL termination with Let's Encrypt
-- Port 80/443 consolidation
-- Access control and authentication
-- Service routing
+Nginx Proxy Manager (NPM) provides:
+- TLS/SSL termination with Let's Encrypt.
+- Port 80/443 consolidation.
+- Access control and authentication.
+- HTTP(S) routing for internal services.
 
-Setup via NPM UI (http://192.168.0.198:81):
-1. Admin Panel > Proxy Hosts
-2. Add new proxy host
-3. Configure domain, SSL certificate, upstream service
-4. Save and test
+Setup via NPM UI (`http://192.168.0.197:81` by default):
+1. Sign in with the default admin user and immediately change the password.
+2. Go to **Proxy Hosts** and add a new proxy host.
+3. Configure domain, SSL certificate (Let's Encrypt), and upstream service.
+4. Save and test.
 
 ### Pi-hole DNS
 
-Serves DNS to LAN and VPN clients:
-- Blocks ads and malicious domains
-- Logs DNS queries
-- Custom DNS records for internal services
+Pi-hole serves DNS to LAN and VPN clients:
+- Blocks ads and known malicious domains.
+- Logs DNS queries.
+- Can host custom DNS records for internal services.
 
-Access: `http://192.168.0.198/admin`
+Access: `http://192.168.0.198/admin`.
 
 ### Security Best Practices
 
 **Do:**
-- Keep `.env` files with secrets out of version control
-- Use strong, unique passwords for each service
-- Enable TLS/SSL for all public-facing services
-- Restrict SSH access to authorized IPs
-- Regularly update: `docker compose pull && docker compose up -d`
-- Monitor logs for suspicious activity
-- Use VPN for remote access (don't expose directly to internet)
-- Review firewall rules: `sudo ufw status`
+- Keep `.env` files with secrets out of version control.
+- Use strong, unique passwords for each service.
+- Enable TLS/SSL for all public-facing services.
+- Restrict SSH access to authorized IPs.
+- Regularly update containers: `docker compose pull && docker compose up -d`.
+- Monitor logs for suspicious activity.
+- Prefer VPN for remote access instead of exposing services directly to the internet.
+- Review firewall rules: `sudo ufw status`.
 
 **Don't:**
-- Hardcode secrets in docker compose.yml
-- Expose services without authentication
-- Use default passwords
-- Mount Docker socket without ACL consideration
-- Keep sensitive backups in the repository
-- Leave unnecessary ports open
+- Hardcode secrets in `docker-compose.yml`.
+- Expose services without authentication.
+- Use default passwords.
+- Mount the Docker socket without access control.
+- Keep sensitive backups inside the repository.
+- Leave unnecessary ports open on the router or host firewall.
 
 ### .gitignore Coverage
 
 Protected items:
-- All `.env` files (secrets)
-- Database files (*.db, *.sql)
-- SSL/TLS certificates (*.pem, *.key)
-- SSH keys and fingerprints
-- Runtime data directories (config, data, logs)
-- Large media files
-- World saves and game data
+- All `.env` files (secrets).
+- Database files (`*.db`, `*.sql`).
+- SSL/TLS certificates (`*.pem`, `*.key`).
+- SSH keys and fingerprints.
+- Runtime data directories (config, data, logs).
+- Large media files.
+- World saves and game data.
 
 Allowed in Git:
-- docker compose.yml (uses env vars, no secrets)
-- .env.example (template)
-- READMEs and documentation
-- Prometheus/monitoring configs
+- `docker-compose.yml` files that use environment variables.
+- `.env.example` templates.
+- READMEs and documentation.
+- Monitoring and metric configuration files.
 
 ---
 
@@ -726,7 +673,7 @@ Allowed in Git:
 
 ```bash
 # List containers with details
-docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}"
+docker ps --format "table {{.Names}}	{{.Image}}	{{.Status}}	{{.Ports}}"
 
 # View logs
 docker compose logs -f [service]     # Follow logs
@@ -776,7 +723,7 @@ sudo iotop -aoP                      # Aggregated, processes
 du -sh /mnt/media/*
 df -h
 
-# Monitor in real-time
+# Monitor in real time
 watch -n 2 'du -sh /mnt/media/*'
 ```
 
@@ -797,28 +744,27 @@ rsync -av --delete /mnt/media/ /mnt/external/media/
 
 ## Troubleshooting
 
-### Services Can't Communicate
+### Services cannot communicate
 
-Container A can't reach Container B:
+If one container cannot reach another:
 ```bash
-# Verify both on proxy_network
+# Verify both are on the same network (for example proxy_network)
 docker network inspect proxy_network | grep -E '"Name"|"Containers"'
 
 # Test connectivity
 docker exec [container-a] ping [container-b]
 ```
 
-### Port Already in Use
+### Port already in use
 
 ```bash
-# Find process
+# Find the process using the port
 lsof -i :80
 
-# Change docker compose port mapping or kill process
-docker compose down && docker compose up -d
+# Change the port mapping in docker-compose.yml or stop the conflicting process
 ```
 
-### Out of Disk Space
+### Out of disk space
 
 ```bash
 # Check usage
@@ -829,28 +775,28 @@ du -sh /mnt/media/* | sort -h
 docker system prune -a --volumes
 ```
 
-### HDD Won't Spin Down
+### HDD will not spin down
 
 ```bash
-# Check what's accessing it
+# Check what is accessing the drive
 sudo iotop -aoP | head -20
 
 # Common culprits: Transmission seeding, frequent Radarr/Sonarr scans
-# Verify settings: Transmission > Pause All, Radarr/Sonarr intervals
+# Verify settings: Transmission > Pause All, Radarr/Sonarr scan intervals
 ```
 
-### Nextcloud Database Connection Fails
+### Nextcloud database connection fails
 
 ```bash
 # Check MariaDB
-docker compose ps nextcloud-database
+ocker compose ps nextcloud-database
 docker compose logs nextcloud-database
 
 # Restart stack
 docker compose down && sleep 2 && docker compose up -d
 ```
 
-### Nginx Proxy Manager Returns 502
+### Nginx Proxy Manager returns 502
 
 ```bash
 # Check NPM logs
@@ -877,4 +823,4 @@ docker exec npm ping [service]
 
 **Last Updated:** December 2025 | **Status:** Active
 
-For service-specific setup and configuration, see individual READMEs linked above.
+For service-specific setup and configuration, see the individual READMEs linked above.
