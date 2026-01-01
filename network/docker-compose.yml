@@ -10,8 +10,8 @@ services:
       - '${NPM_IP:-192.168.0.197}:443:443' # Public HTTPS Port
       - '${NPM_IP:-192.168.0.197}:81:81' # Admin Web Port
     volumes:
-      - ${CONFIG_PATH:-/opt/docker}/proxy/data:/data
-      - ${CONFIG_PATH:-/opt/docker}/proxy/letsencrypt:/etc/letsencrypt
+      - ${CONFIG_PATH:-/opt/docker}/network/data:/data
+      - ${CONFIG_PATH:-/opt/docker}/network/letsencrypt:/etc/letsencrypt
     networks:
       - pihole
       - proxy_network
