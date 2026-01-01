@@ -1,19 +1,37 @@
-# Dashboard Services (Homarr + Beszel)
+# Dashboard (Homarr + Beszel)
 
-Homarr: Modern dashboard for services.
-Beszel: System monitoring overlay.
+Homarr: App dashboard. Beszel: Metrics overlay.
 
 ## Quick Start
 
 ```bash
+cp .env.example .env
 cd dashboard
 docker compose up -d
 ```
 
-Access Homarr: http://192.168.0.102:7575
+Homarr: http://host:7575
 
 ## Config
-- Edit configs/ for Homarr widgets.
-- Icons/imgs/ for custom images.
 
-Volumes ignored in .gitignore.
+- configs/: Homarr JSON/widgets.
+- icons/imgs/: Custom images (ignored).
+- beszel_data/: Metrics DB (ignored).
+
+## Customization
+
+Edit Homarr config.json: Add services (e.g., NPM proxy URL, Pi-hole stats).
+Beszel: Prometheus/Grafana integration.
+
+## Volumes
+
+./configs:/app/data (Homarr)
+./beszel_data:/data (ignored)
+
+## Maintenance
+
+```
+docker compose logs homarr -f
+```
+
+Troubleshoot: Port 7575 open, config perms 1000:1000.

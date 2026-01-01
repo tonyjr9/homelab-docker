@@ -1,14 +1,24 @@
 # Media Services
 
-Transmission for torrents, ready for Plex/arr stack.
+Transmission + Plex/Overseerr prep.
 
-## Setup
+## Quick Start
+
 ```bash
 cd media
 docker compose up -d
 ```
 
-Transmission: http://192.168.0.102:9091
-Overseerr/Plex configs in media/overseer, media/plex (ignored).
+Transmission: http://host:9091
 
-Webhook for arr integration in progress.
+## Setup
+
+- watch/: Auto-import.
+- transmission/downloads (ignored).
+- overseerr/plex configs (ignored).
+
+Webhook: For arr/Plex integration (progress).
+
+Volumes: ./transmission:/config (ignored).
+
+Maintenance: docker compose logs transmission
