@@ -25,7 +25,7 @@ Personal homelab built with Docker Compose for media, networking, cloud storage,
 | Component | Details |
 |-----------|--------|
 | **Host OS** | Debian 13 — bare-metal or VM (e.g. Proxmox); i7-8700H, 40 GB RAM, 256 GB NVMe |
-| **Storage** | 1× 12 TB HDD (planned: RAID 10 with 4× HDDs) |
+| **Storage** | 1× 12 TB HDD (planned: RAID 10/ RAID 5 with 4× HDDs) |
 | **Hypervisor** | KVM/libvirt (virt-manager) — hosts Home Assistant VM (2 vCPU, 4 GB RAM) |
 | **Router** | TP-Link ER605 — OpenVPN server, DDNS, port forwarding, Gigabit LAN |
 
@@ -77,6 +77,7 @@ Debian Server (192.168.0.102 · 192.168.0.197 NPM · 192.168.0.198 Pi-hole)
 ---
 
 ## Services
+Click on the directory to see the corresponding README
 
 | Stack | Directory | Details |
 |-------|-----------|--------|
@@ -176,7 +177,7 @@ Result: HDD sleeps ~90% of the time at idle. Note: enterprise/NAS drives (Seagat
 - **Transmission** — stop seeding at ratio 0.1; pause if idle > 5 min.
 - **Radarr/Sonarr** — check for finished downloads every 120+ min.
 - **RSS polling** — disabled; manual refresh preferred.
-- **Webhooks** — trigger scans only on download completion.
+- **Webhooks** — trigger scans only on download completion (in test phase).
 
 ### Home Assistant VM
 
