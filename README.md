@@ -231,9 +231,33 @@ sudo chmod +x /usr/local/bin/manage.sh
 echo "alias manage='sudo /usr/local/bin/manage.sh'" >> ~/.zshrc
 ```
 
-Features: start/stop stacks, system monitoring, HDD spindown, Nextcloud/Minecraft backups, log viewer.
+### Script usage
+
+`manage.sh` is a small helper for day-to-day stack operations from the repo root. It works with the current directory layout (`network`, `dashboard`, `cloud`, `media`, `syncthing`, `minecraft`, and `minecraft_keith` when present) and only runs normal `docker compose` commands against existing compose files.
+
+It does **not** edit compose files or uncomment services that are currently disabled for testing.
+
+```bash
+# Examples
+manage list
+manage status all
+manage up network
+manage update media
+manage logs dashboard homarr
+manage doctor
+```
+
+Available actions:
+* List available stacks.
+
+* Start, stop, restart, pull, and update one stack or all stacks.
+
+* Follow logs for a stack or a specific service.
+
+* Run basic checks for Docker, root `.env`, and `proxy_network`.
 
 ---
+
 
 ## Useful Commands
 
