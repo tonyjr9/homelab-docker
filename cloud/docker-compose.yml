@@ -1,73 +1,64 @@
 services:
-  nextcloud-database:
-    image: mariadb:11.3
-    container_name: nextcloud-database
+  # --- Seafile (server + DB + cache) ---
+  seafile-db:
+    image: mariadb:10.11
+    container_name: seafile-db
     restart: unless-stopped
-    command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW --innodb-file-per-table=1 --skip-innodb-read-only-compressed
-    volumes:
-      - ./db:/var/lib/mysql
-    env_file:
-      - nextcloud.env
-    networks:
-      - proxy_network
-  
-
-  nextcloud-redis:
-    image: redis:7.2.4
-    container_name: nextcloud-redis
-    restart: unless-stopped
-    command: redis-server --requirepass fMHtAdH766suqiB
-    networks:
-      - proxy_network
-   
-  nextcloud:
-    image: lscr.io/linuxserver/nextcloud:latest
-    container_name: nextcloud
-    restart: unless-stopped
-    links:
-      - nextcloud-database
-      - nextcloud-redis
-    ports:
-      - 8080:80
-    volumes:
-      # - /mnt/media/nextcloud/root:/var/www/html
-      - ./config:/config  
-      # - /mnt/media/nextcloud/nextcloud/config:/config
-      - /mnt/media/cloud/nextcloud/data:/data
+    hostname: seafile-db
     environment:
-      - PUID=1000
-      - PGID=1000
-      - MYSQL_HOST=nextcloud-database
-      - REDIS_HOST_PASSWORD=fMHtAdH766suqiB
-    env_file:
-      - nextcloud.env
-
+      SEAFILE_MYSQL_DB_USER: ${SEAFILE_MYSQL_DB_USER}
+      MYSQL_ROOT_PASSWORD: ${INIT_SEAFILE_MYSQL_ROOT_PASSWORD}
+      MYSQL_LOG_CONSOLE: "true"
+      MARIADB_AUTO_UPGRADE: "1"
+    volumes:
+      - /mnt/media/cloud/seafile/db:/var/lib/mysql
     networks:
       - proxy_network
+
+  seafile-memcached:
+    image: memcached:1.6
+    container_name: seafile-memcached
+    restart: unless-stopped
+    networks:
+      proxy_network:
+        aliases: 
+          - memcached
+
+  seafile:
+    image: seafileltd/seafile-mc:13.0.15
+    container_name: seafile
+    restart: unless-stopped
     depends_on:
-      - nextcloud-database
-      - nextcloud-redis
-      
-  syncthing:
-    image: lscr.io/linuxserver/syncthing:2.0.3
-    container_name: syncthing
-    environment:
-      - PUID=1000
-      - PGID=1000
+      - seafile-db
+      - seafile-memcached
     volumes:
-      - /mnt/media/cloud/sync/config:/config
-      - /mnt/media/cloud/sync/data1:/data1
-      - /mnt/media/cloud/sync/data2:/data2
-    ports:
-      - 8384:8384
-      - 22000:22000/tcp
-      - 22000:22000/udp
-      - 21027:21027/udp
+      - /mnt/media/cloud/seafile/data:/shared
+    environment:
+      SEAFILE_MYSQL_DB_HOST: ${SEAFILE_MYSQL_DB_HOST}
+      SEAFILE_MYSQL_DB_PORT: "${SEAFILE_MYSQL_DB_PORT}"
+      SEAFILE_MYSQL_DB_USER: ${SEAFILE_MYSQL_DB_USER}
+      SEAFILE_MYSQL_DB_CCNET_DB_NAME: ${SEAFILE_MYSQL_DB_CCNET_DB_NAME}
+      SEAFILE_MYSQL_DB_SEAFILE_DB_NAME: ${SEAFILE_MYSQL_DB_SEAFILE_DB_NAME}
+      SEAFILE_MYSQL_DB_SEAHUB_DB_NAME: ${SEAFILE_MYSQL_DB_SEAHUB_DB_NAME}
+      INIT_SEAFILE_MYSQL_ROOT_PASSWORD: ${INIT_SEAFILE_MYSQL_ROOT_PASSWORD}
+      SEAFILE_MYSQL_DB_PASSWORD: ${SEAFILE_MYSQL_DB_PASSWORD}
+      INIT_SEAFILE_ADMIN_EMAIL: ${INIT_SEAFILE_ADMIN_EMAIL}
+      INIT_SEAFILE_ADMIN_PASSWORD: ${INIT_SEAFILE_ADMIN_PASSWORD}
+      JWT_PRIVATE_KEY: ${JWT_PRIVATE_KEY}
+      SEAFILE_SERVER_HOSTNAME: ${SEAFILE_SERVER_HOSTNAME}
+
+      
+      #INIT_SEAFILE_MYSQL_ROOT_PASSWORD: ${SEAFILE_DB_ROOT_PASSWORD}
+      #SEAFILE_ADMIN_EMAIL: ${SEAFILE_ADMIN_EMAIL}
+      #SEAFILE_ADMIN_PASSWORD: ${SEAFILE_ADMIN_PASSWORD}
+      #SEAFILE_SERVER_HOSTNAME: ${SEAFILE_SERVER_HOSTNAME}
+      # If running behind HTTPS reverse proxy, you may also want:
+      SEAFILE_SERVER_LETSENCRYPT: false 
+      FORCE_HTTPS_IN_CONF: false
+      #
     networks:
       - proxy_network
-    restart: unless-stopped
-    
+
 networks:
-  proxy_network:
-    name: proxy_network
+  proxy_network: 
     external: true

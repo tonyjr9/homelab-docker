@@ -1,7 +1,7 @@
 ---
 id: darkpeers-api
 name: Darkpeers (API)
-description: "Darkpeers is a NORDIC Private Torrent Tracker for MOVIES / TV"
+description: "Darkpeers is a Private Torrent Tracker for MOVIES / TV / GENERAL"
 language: en-US
 type: private
 encoding: UTF-8
@@ -17,6 +17,8 @@ caps:
     - {id: 5, cat: PC, desc: "Software"}
     - {id: 6, cat: XXX, desc: "XXX"}
     - {id: 7, cat: Other, desc: "Assorted"}
+    - {id: 8, cat: Books, desc: "Books"}
+    - {id: 9, cat: TV/Anime, desc: "Anime"}
 
   modes:
     search: [q]
@@ -24,6 +26,7 @@ caps:
     movie-search: [q, imdbid, tmdbid]
     music-search: [q]
     book-search: [q]
+  allowtvsearchimdb: true
 
 settings:
   - name: apikey

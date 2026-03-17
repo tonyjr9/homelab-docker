@@ -34,6 +34,7 @@ caps:
     - {id: 78, cat: TV/Sport, desc: "Porsche Supercup"}
     - {id: 32, cat: TV/Sport, desc: "Stock Car Brazil"}
     - {id: 63, cat: TV/Sport, desc: "Supercars"}
+    - {id: 84, cat: TV/Sport, desc: "Super Formula"}
     - {id: 83, cat: TV/Sport, desc: "Super GT"}
     - {id: 80, cat: TV/Sport, desc: "Touring Cars"}
     - {id: 57, cat: TV/Sport, desc: "WEC"}
@@ -115,8 +116,8 @@ search:
   # if we have an id based search, add Season and Episode as query in name for UNIT3D < v6.  Else pass S/E Params for UNIT3D >= v6
     $raw: "{{ range .Categories }}&categories[]={{.}}{{end}}"
     name: "{{ .Keywords }}"
-    seasonNumber: "{{ .Query.Season }}"
-    episodeNumber: "{{ .Query.Ep }}"
+    # seasonNumber: "{{ .Query.Season }}" # not supported
+    # episodeNumber: "{{ .Query.Ep }}" # not supported
     "free[]": "{{ if .Config.freeleech }}100{{ else }}{{ end }}"
     sortField: "{{ .Config.sort }}"
     sortDirection: "{{ .Config.type }}"

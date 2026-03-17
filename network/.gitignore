@@ -23,3 +23,6 @@ docker-compose.override.yml
 *.bak
 *~
 
+# openvpn files && data
+openvpn-data
+*.ovpn

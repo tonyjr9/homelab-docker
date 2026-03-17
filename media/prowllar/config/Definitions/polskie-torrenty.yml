@@ -107,12 +107,11 @@ caps:
     book-search: [q]
 
 settings:
-  - name: username
+  - name: cookie
     type: text
-    label: Username
-  - name: password
-    type: password
-    label: Password
+    label: Cookie
+  - name: info_cookie
+    type: info_cookie
   - name: multilang
     type: checkbox
     label: Replace MULTi by another language in release name
@@ -124,40 +123,56 @@ settings:
     options:
       POLISH: POLISH
       MULTi POLISH: MULTi POLISH
+  - name: sort
+    type: select
+    label: Sort requested from site
+    default: date
+    options:
+      date: created
+      seed: seeders
+      size: size
+      name: title
+  - name: type
+    type: select
+    label: Order requested from site
+    default: desc
+    options:
+      desc: desc
+      asc: asc
+  - name: info_limit
+    type: info
+    label: "Download Daily Limit"
+    default: "Polskie-Torrenty has a daily limit on downloads. If downloads <b>fail</b> then you have exceeded your daily limit. Try again tomorrow."
 
 login:
-  path: login.php
-  method: form
-  form: form[name="login"]
+  method: cookie
   inputs:
-    uid: "{{ .Config.username }}"
-    pwd: "{{ .Config.password }}"
-    keeplogged: 1
-  error:
-    - selector: font[color="#FF0000"]
+    cookie: "{{ .Config.cookie }}"
   test:
     path: index.php
     selector: a[href="logout.php"]
 
 search:
   paths:
-    # https://polskie-torrenty.eu/torrents.php?c115=1&c116=1&c117=1&c118=1&search=
-    - path: torrents.php
+    # https://polskie-torrenty.eu/wyszukaj.php?q=Ronin&category=72&sort=seed_desc
+    - path: wyszukaj.php
   inputs:
     $raw: "{{ range .Categories }}c{{.}}=1&{{end}}"
-    search: "{{ .Keywords }}"
-    # does not support sorting results, or imdbid searching, or have imdb in results
+    q: "{{ if .Keywords }}{{ .Keywords }}{{ else }}{{ .Today.Year }}{{ end }}"
+    sort: "{{ .Config.sort }}_{{ .Config.type }}"
 
   rows:
-    selector: div.boxcontent > table:has(a.link2)
+    selector: table.results-table tbody tr
 
   fields:
-    categorydesc:
-      selector: div.link1 > font
-      optional: true
-      default: Pozostale
+    category:
+      selector: td:nth-child(1) a
+      attribute: href
+      filters:
+        - name: querystring
+          args: sub_category
     title_phase1:
-      selector: a.link2[href^="details.php?id="]
+      selector: td:nth-child(2) a
     title_multilang:
       text: "{{ .Result.title_phase1 }}"
       filters:
@@ -168,44 +183,22 @@ search:
     title:
       text: "{{ if .Config.multilang }}{{ .Result.title_multilang }}{{ else }}{{ .Result.title_phase1 }}{{ end }}"
     details:
-      selector: a[href^="details.php?id="]
+      selector: td:nth-child(2) a
       attribute: href
     download:
-      selector: a[href^="details.php?id="]
+      selector: td:nth-child(2) a
       attribute: href
       filters:
         - name: replace
-          args: ["details.php?id=", "download.php?torrent="]
-    poster:
-      selector: img.poster-torrent
-      attribute: src
+          args: ["details.php?id=", "download.php?id="]
     date:
-      selector: td.pole
-      filters:
-        - name: regexp
-          args: "(\\d{2}-\\d{2}-\\d{4})"
-        - name: dateparse
-          args: "dd-MM-yyyy"
+      text: now
     size:
-      selector: td.pole
-      filters:
-        - name: regexp
-          args: "(\\d+\\.\\d+ [T|G|M|K|k]B)"
+      selector: td:nth-child(3)
     seeders:
-      selector: td.pole
-      filters:
-        - name: regexp
-          args: "Seedów: (\\d+)"
+      selector: td:nth-child(4)
     leechers:
-      selector: td.pole
-      filters:
-        - name: regexp
-          args: "Peerów: (\\d+)"
-    grabs:
-      selector: td.pole
-      filters:
-        - name: regexp
-          args: "Pobrano: (\\d+)"
+      selector: td:nth-child(5)
     downloadvolumefactor:
       text: 0
     uploadvolumefactor:

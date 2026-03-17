@@ -60,32 +60,32 @@ services:
       DASHDOT_GRAPH_MAX_DATAPOINTS: '20'
       DASHDOT_WIDGET_LIST: 'os,cpu,storage,ram,network'  # Custom widget order
 
-  beszel:
-    image: henrygd/beszel:latest
-    container_name: beszel
-    restart: unless-stopped
-    ports:
-      - 8090:8090
-    volumes:
-      - ./beszel_data:/beszel_data
-      - ./beszel_socket:/beszel_socket
-    networks:
-      - proxy_network
-
-  beszel-agent:
-    image: henrygd/beszel-agent:latest
-    container_name: beszel-agent
-    restart: unless-stopped
-    network_mode: host
-    volumes:
-      - ./beszel_agent_data:/var/lib/beszel-agent
-      - ./beszel_socket:/beszel_socket
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    environment:
-      LISTEN: 45876
-      KEY: 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINr7BMk1yyA28U/su2afPD04PQawhSyVJgKvgEoMcqOM'
-      TOKEN: be4b6acb-876a-460d-8d31-e64cedbd6700
-      HUB_URL: http://192.168.0.102:8090
+#  beszel:
+#    image: henrygd/beszel:latest
+#    container_name: beszel
+#    restart: unless-stopped
+#    ports:
+#      - 8090:8090
+#    volumes:
+#      - ./beszel_data:/beszel_data
+#      - ./beszel_socket:/beszel_socket
+#    networks:
+#      - proxy_network
+#
+#  beszel-agent:
+#    image: henrygd/beszel-agent:latest
+#    container_name: beszel-agent
+#    restart: unless-stopped
+#    network_mode: host
+#    volumes:
+#      - ./beszel_agent_data:/var/lib/beszel-agent
+#      - ./beszel_socket:/beszel_socket
+#      - /var/run/docker.sock:/var/run/docker.sock:ro
+#    environment:
+#      LISTEN: 45876
+#      KEY: 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINr7BMk1yyA28U/su2afPD04PQawhSyVJgKvgEoMcqOM'
+#      TOKEN: be4b6acb-876a-460d-8d31-e64cedbd6700
+#      HUB_URL: http://192.168.0.102:8090
 
 
 

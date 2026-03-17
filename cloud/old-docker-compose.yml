@@ -1,0 +1,73 @@
+services:
+  nextcloud-database:
+    image: mariadb:11.3
+    container_name: nextcloud-database
+    restart: unless-stopped
+    command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW --innodb-file-per-table=1 --skip-innodb-read-only-compressed
+    volumes:
+      - ./db:/var/lib/mysql
+    env_file:
+      - nextcloud.env
+    networks:
+      - proxy_network
+  
+
+  nextcloud-redis:
+    image: redis:7.2.4
+    container_name: nextcloud-redis
+    restart: unless-stopped
+    command: redis-server --requirepass fMHtAdH766suqiB
+    networks:
+      - proxy_network
+   
+  nextcloud:
+    image: lscr.io/linuxserver/nextcloud:latest
+    container_name: nextcloud
+    restart: unless-stopped
+    links:
+      - nextcloud-database
+      - nextcloud-redis
+    ports:
+      - 8080:80
+    volumes:
+      # - /mnt/media/nextcloud/root:/var/www/html
+      - ./config:/config  
+      # - /mnt/media/nextcloud/nextcloud/config:/config
+      - /mnt/media/cloud/nextcloud/data:/data
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - MYSQL_HOST=nextcloud-database
+      - REDIS_HOST_PASSWORD=fMHtAdH766suqiB
+    env_file:
+      - nextcloud.env
+
+    networks:
+      - proxy_network
+    depends_on:
+      - nextcloud-database
+      - nextcloud-redis
+      
+  syncthing:
+    image: lscr.io/linuxserver/syncthing:2.0.3
+    container_name: syncthing
+    environment:
+      - PUID=1000
+      - PGID=1000
+    volumes:
+      - /mnt/media/cloud/sync/config:/config
+      - /mnt/media/cloud/sync/data1:/data1
+      - /mnt/media/cloud/sync/data2:/data2
+    ports:
+      - 8384:8384
+      - 22000:22000/tcp
+      - 22000:22000/udp
+      - 21027:21027/udp
+    networks:
+      - proxy_network
+    restart: unless-stopped
+    
+networks:
+  proxy_network:
+    name: proxy_network
+    external: true

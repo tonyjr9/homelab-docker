@@ -1,0 +1,22 @@
+services:
+  mc-vanilla-keith:
+    image: itzg/minecraft-server
+    container_name: mc-vanilla-keith
+    restart: unless-stopped
+    ports:
+      - "25567:25565" 
+    environment:
+      EULA: "TRUE"
+      TYPE: "VANILLA"
+      VERSION: "1.21.11"
+      MEMORY: "4G"         
+      ENABLE_WHITELIST: "FALSE"
+      ONLINE_MODE: "FALSE"
+    volumes:
+      - ./data:/data
+    networks:
+      - proxy_network
+
+networks:
+  proxy_network:
+    external: true

@@ -1,13 +1,16 @@
 ---
 id: pornotorrent
 name: PornoTorrent
-description: "PornoTorrent is a SPANISH Public Torrent Tracker for 3X"
-language: en-US
+description: "PornoTorrent is a BRAZILIAN Public Torrent Tracker for 3X"
+language: pt-BR
 type: public
 encoding: UTF-8
 testlinktorrent: false
 links:
+  - https://pornotorrent.com.br/
+legacylinks:
   - https://www.pornotorrent.eu/
+  - https://pornotorrent.net.br/
 
 caps:
   categorymappings:
@@ -20,42 +23,40 @@ settings: []
 
 download:
   selectors:
-    - selector: a.button_link
-      attribute: href
+    - selector: script:contains("CM_MAGNET_URL")
       filters:
-        - name: replace
-          args: ["////", "//"]
+        - name: regexp
+          args: /magnet./(.+?)\"
+        - name: urldecode
 
 search:
   paths:
     - path: /
   inputs:
     s: "{{ .Keywords }}"
+    cat: 0
 
   rows:
-    selector: ul.lista-filmes > li
-    filters:
-      - name: andmatch
+    selector: div.section_inner > div.row > div
 
   fields:
     category:
       text: XXX
     title:
-      selector: a
-      attribute: title
+      selector: a.cm-card-pretitle__badge
     details:
-      selector: a
+      selector: a.cm-card-pretitle__badge
       attribute: href
     download:
-      selector: a
+      selector: a.cm-card-pretitle__badge
       attribute: href
     poster:
       selector: img
-      attribute: data-lazy-src
+      attribute: src
     date:
       text: now
     size:
-      text: "512 MB"
+      text: 5GB
     seeders:
       text: 1
     leechers:
@@ -64,4 +65,6 @@ search:
       text: 0
     uploadvolumefactor:
       text: 1
+    description:
+      selector: span:has(span.cm-ico-clock)
 # engine n/a

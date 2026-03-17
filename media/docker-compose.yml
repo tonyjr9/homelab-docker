@@ -20,6 +20,26 @@ services:
       - ${MEDIA_PATH:-/mnt/media}/media/tvseries:/data/tv
     restart: unless-stopped
 
+  jellyfin:
+    image: lscr.io/linuxserver/jellyfin:latest
+    container_name: jellyfin
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-Europe/Lisbon}
+      - JELLYFIN_PublishedServerUrl=https://your-subdomain.duckdns.org
+    volumes:
+      - ./jellyfin/config:/config
+      - ./jellyfin/cache:/cache
+      - /mnt/media/media/movies:/data/movies
+      - /mnt/media/media/tvseries:/data/tv
+    ports:
+      - 8096:8096/tcp
+      - 7359:7359/udp
+    restart: unless-stopped
+    networks:
+      - proxy_network
+
   transmission:
     image: lscr.io/linuxserver/transmission:latest
     container_name: transmission
@@ -31,7 +51,7 @@ services:
     volumes:
       - /opt/docker/media/transmission/config:/config
       - /mnt/media/media/transmission/downloads:/downloads
-#      - /mnt/media/media/transmission/watch:/watch
+      - /mnt/media/media/transmission/watch:/watch
     restart: unless-stopped
     ports:
       - 192.168.0.102:9091:9091
@@ -105,19 +125,19 @@ services:
     networks:
       - proxy_network
   
-  notifiarr:
-    container_name: notifiarr
-    hostname: notifiarr
-    image: golift/notifiarr
-    restart: unless-stopped
-    ports:
-      - "5454:5454"
-    volumes:
-      - ${DATA_PATH:-/data}/notifiarr:/config
-      - /var/run/utmp:/var/run/utmp
-      - /etc/machine-id:/etc/machine-id
-    networks:
-      - proxy_network
+  #notifiarr:
+    #container_name: notifiarr
+    #hostname: notifiarr
+    #image: golift/notifiarr
+    #restart: unless-stopped
+    #ports:
+    #  - "5454:5454"
+    #volumes:
+    #  - ${DATA_PATH:-/data}/notifiarr:/config
+    #  - /var/run/utmp:/var/run/utmp
+    #  - /etc/machine-id:/etc/machine-id
+    #networks:
+    #  - proxy_network
 networks:
   proxy_network: 
     external: true

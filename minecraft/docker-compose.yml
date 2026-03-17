@@ -13,8 +13,8 @@ services:
       ENABLE_WHITELIST: "FALSE"
       ONLINE_MODE: "FALSE"   # keep true unless you handle auth yourself
     volumes:
-      - /mnt/media/minecraft/data:/data
-      # - ./data:/data
+      #- /mnt/media/minecraft/data:/data
+      - ./data:/data
     stdin_open: true
     tty: true
     networks:
