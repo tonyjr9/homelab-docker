@@ -1,11 +1,11 @@
 plex/*
-immich/
-overseer/
-plex/
-prowlarr/
-radarr/
-sonarr/
-tautulli/
-transmission/
+immich
+overseer
+plex
+prowlarr
+radarr
+sonarr
+tautulli
+transmission
 *.env
 

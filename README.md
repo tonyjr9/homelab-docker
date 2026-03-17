@@ -33,7 +33,7 @@ Production-ready personal homelab built with Docker Compose for media, networkin
 | **Host OS** | Debian 13 | Bare-metal or Debian VM on Proxmox/other hypervisor; i7-8700H, 40GB RAM, 1x 256GB NVMe SSD |
 | **Storage** | HDD Array | Currently 1x 12TB (future: RAID 10 or RAID 5 with 4x HDDs) |
 | **Hypervisor** | KVM/libvirt (virt-manager) | Hosts Home Assistant VM (2 vCPU, 4GB RAM) |
-| **Router/Gateway** | TP-Link ER605 | OpenVPN server, DDNS, port forwarding, Gigabit LAN |
+| **Router/Gateway** | TP-Link ER605 | OpenVPN server (fallback), DDNS, port forwarding, Gigabit LAN |
 
 > The stack assumes a Debian server environment. This can be a bare-metal Debian install or a Debian VM (for example on Proxmox or another hypervisor). Home Assistant runs in a separate KVM/libvirt VM managed by virt-manager, but any VM host providing a Debian guest works.
 
@@ -122,7 +122,7 @@ cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
 | **Debian Server** | 192.168.0.102 | Docker services, internal routing |
 | **Nginx Proxy Manager** | 192.168.0.197 | Reverse proxy |
 | **Pi-hole** | 192.168.0.198 | DNS resolution, ad-blocking |
-| **Home Assistant VM** | 192.168.0.103 | KVM/libvirt managed, accessible via proxy |
+| **Home Assistant VM** | 192.168.0.109 | KVM/libvirt managed, accessible via proxy |
 
 **Network configuration (example):**
 ```bash
@@ -134,7 +134,7 @@ cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
 **TP-Link ER605 gateway:**
 - LAN IP: 192.168.0.1
 - OpenVPN server network: 192.168.X.0/24 (IP pool of connected devices)(remote access)
-- DDNS: vpn.duckdns.org
+- DDNS: <duckdns-domain>.duckdns.org
 
 ---
 
@@ -196,6 +196,7 @@ Example: `https://dashboard.domain.duckdns.org` (I use a free domain from duck d
 - Access via homelab IPs: `http://homelab-ip:7575` (Homarr), `https://subdomain.domain`
 
 **Public domains (optional)**
+- I recommend using a paid domain.
 - Exposed via Nginx Proxy Manager reverse proxy.
 - Secured with Let's Encrypt TLS certificates.
 - Example: `https://dashboard.yourdomain.com`.
@@ -301,6 +302,8 @@ virsh list                    # List VMs
 virsh start home-assistant    # Start VM
 virsh shutdown home-assistant # Graceful shutdown
 ```
+
+You can also use a vnc server running on debian host and connect to the UI of the server via some VNC viewer, for that you need to install xfce for example in Debian host
 
 **Access:**
 - Local: `http://192.168.0.102:8123`.
@@ -857,6 +860,6 @@ docker exec npm ping [service]
 
 ---
 
-**Last Updated:** December 2025 | **Status:** Active
+**Last Updated:** March 2026 | **Status:** Active
 
 For service-specific setup and configuration, see the individual READMEs linked above.
