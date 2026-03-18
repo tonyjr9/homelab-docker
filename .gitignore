@@ -68,11 +68,6 @@ dashboard/beszel_socket/
 dashboard/beszel_agent_data/
 dashboard/*.env
 
-# IT Tools
-ittools/config/
-ittools/ssl/
-ittools/wazuh-docker/
-ittools/*.env
 
 # Nextcloud
 nextcloud/config/
@@ -83,11 +78,12 @@ nextcloud/old/
 nextcloud/*.env
 
 # Media
-media/transmission/
-media/config/
-media/overseer/config/
-media/plex/config/
-media/immich/
+media/transmission
+media/config
+media/overseer
+media/plex
+media/immich
+media/tautulli
 media/*.env
 
 # Syncthing
