@@ -26,3 +26,5 @@ docker-compose.override.yml
 # openvpn files && data
 openvpn-data
 *.ovpn
+client-configs
+openvpn-data
