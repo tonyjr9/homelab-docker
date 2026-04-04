@@ -83,8 +83,8 @@ services:
 #      - /var/run/docker.sock:/var/run/docker.sock:ro
 #    environment:
 #      LISTEN: 45876
-#      KEY: 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINr7BMk1yyA28U/su2afPD04PQawhSyVJgKvgEoMcqOM'
-#      TOKEN: be4b6acb-876a-460d-8d31-e64cedbd6700
+#      KEY: ''
+#      TOKEN: 
 #      HUB_URL: http://192.168.0.102:8090
 
 
