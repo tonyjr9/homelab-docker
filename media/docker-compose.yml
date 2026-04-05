@@ -60,22 +60,48 @@ services:
     networks:
       - proxy_network 
 
-
-  overseerr:
-    image: lscr.io/linuxserver/overseerr:latest
-    container_name: overseerr
-    environment:
-      - PUID=${PUID:-1000}
-      - PGID=${PGID:-1000}
-      - TZ=${TZ:-Europe/Lisbon}
+  unpackerr:
+    image: golift/unpackerr
+    container_name: unpackerr
+    user: 1000:1000
     volumes:
-      - ./overseer/config:/config
-      - ${DATA_PATH:-/data}:/data
-    ports:
-      - 5055:5055
+      - /mnt/media/media/transmission/downloads/complete:/downloads
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ:-Europe/Lisbon}
+      - UN_LOG_FILE=/downloads/unpackerr.log
+      # Sonarr
+      - UN_SONARR_0_URL=http://sonarr:8989
+      - UN_SONARR_0_API_KEY=${SONARR_API_KEY}
+      - UN_SONARR_0_PATHS_0=/downloads
+      # Radarr
+      - UN_RADARR_0_URL=http://radarr:7878
+      - UN_RADARR_0_API_KEY=${RADARR_API_KEY}
+      - UN_RADARR_0_PATHS_0=/downloads
     networks:
       - proxy_network
+
+  seerr:
+    image: ghcr.io/seerr-team/seerr:latest
+    init: true
+    container_name: seerr
+    environment:
+      - LOG_LEVEL=debug
+      - TZ=${TZ:-Europe/Lisbon}
+      - PORT=5055 #optional
+    ports:
+      - 5055:5055
+    volumes:
+      - ./seerr/config:/app/config
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:5055/api/v1/status || exit 1
+      start_period: 20s
+      timeout: 3s
+      interval: 15s
+      retries: 3
     restart: unless-stopped
+    networks:
+      - proxy_network
 
   radarr:
     image: lscr.io/linuxserver/radarr:latest
@@ -110,6 +136,7 @@ services:
     restart: unless-stopped
     networks:
       - proxy_network
+
   prowlarr:
     image: lscr.io/linuxserver/prowlarr:latest
     container_name: prowllar
@@ -142,5 +169,4 @@ networks:
   proxy_network: 
     external: true
     name: proxy_network
-  radarr_network:
-    name: radarr_network
+

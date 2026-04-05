@@ -14,8 +14,8 @@ Full *arr + Plex/Jellyfin media stack with Transmission for downloads.
 | **Radarr** | 7878 | Movie management |
 | **Sonarr** | 8989 | TV show management |
 | **Prowlarr** | 9696 | Indexer manager |
-| **Overseerr** | 5055 | Request management |
-| **Notifiarr** | 5454 | Notifications (commented out) |
+| **Seerr** | 5055 | Request management |
+| **Unpackerr** | — | Automatic archive extraction |
 
 ## Quick Start
 
@@ -25,7 +25,6 @@ cd media && docker compose up -d
 ```
 
 ## Environment (`.env.example`)
-
 ```
 PUID=1000
 PGID=1000
@@ -33,18 +32,22 @@ TZ=Europe/Lisbon
 MEDIA_PATH=/mnt/media
 CONFIG_PATH=/opt/docker
 PLEX_CLAIM_TOKEN=claim-xxxxx
+SONARR_API_KEY=your_sonarr_api_key
+RADARR_API_KEY=your_radarr_api_key
 ```
+
 
 ## Storage Layout
-
 ```
 /mnt/media/media/
-├── movies/                            # Radarr output → Plex/Jellyfin source
-├── tvseries/                          # Sonarr output → Plex/Jellyfin source
+├── movies/ # Radarr output → Plex/Jellyfin source
+├── tvseries/ # Sonarr output → Plex/Jellyfin source
 └── transmission/
-    └── downloads/
-        └── complete/                  # Radarr/Sonarr pick up completed downloads here
+└── downloads/
+└── complete/ # Radarr/Sonarr pick up completed downloads here
+# Unpackerr extracts archives here before import
 ```
+
 
 ## Plex Notes
 
@@ -65,8 +68,9 @@ To keep the drive sleeping as much as possible:
 
 1. **Prowlarr** — add your indexers here; it pushes them to Radarr and Sonarr automatically.
 2. **Radarr/Sonarr** — point download client to Transmission (`transmission:9091`).
-3. **Overseerr** — connect to Radarr and Sonarr for request management.
-4. **Plex/Jellyfin** — point libraries at `/data/movies` and `/data/tv`.
+3. **Unpackerr** — runs as a sidecar; connects to Radarr and Sonarr via their APIs to automatically extract `.rar`/archive releases before import. Requires `SONARR_API_KEY` and `RADARR_API_KEY` in `.env`.
+4. **Seerr** — connect to Radarr and Sonarr for request management.
+5. **Plex/Jellyfin** — point libraries at `/data/movies` and `/data/tv`.
 
 ## Maintenance
 
@@ -74,6 +78,7 @@ To keep the drive sleeping as much as possible:
 docker compose pull && docker compose up -d
 docker compose logs transmission -f
 docker compose logs radarr -f
+docker compose logs unpackerr -f
 ```
 
 ## Troubleshooting
@@ -84,6 +89,7 @@ docker compose logs radarr -f
 | Radarr/Sonarr can't move files | Verify `PUID/PGID` match ownership of `/mnt/media` |
 | Plex not visible on LAN | Confirm `network_mode: host` and that port 32400 isn't blocked by UFW |
 | Prowlarr not syncing indexers | Check Prowlarr → Settings → Apps — Radarr/Sonarr must be configured there |
+| "Found archive file, might need to be extracted" | Verify Unpackerr is running and API keys are correct: `docker logs unpackerr` |
 
 ---
-Updated March 2026.
+Updated April 2026.
