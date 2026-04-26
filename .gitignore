@@ -1,4 +1,5 @@
 # Updated .gitignore including all data directories and .env files
+docker-data/
 
 # OpenVPN data
 vpn/openvpn-data

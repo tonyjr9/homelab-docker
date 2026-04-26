@@ -1,0 +1,17 @@
+version: "2.4"
+
+services:
+  octoprint:
+    image: octoprint/octoprint
+    restart: unless-stopped
+    ports:
+      - "192.168.0.102:80:80"
+    devices:
+      - /dev/ttyUSB0:/dev/ttyUSB0
+    volumes:
+      - octoprint:/octoprint
+    environment:
+      - ENABLE_MJPG_STREAMER=false  # optional: webcam support
+
+volumes:
+  octoprint:

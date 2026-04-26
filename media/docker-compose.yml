@@ -152,19 +152,20 @@ services:
     networks:
       - proxy_network
   
-  #notifiarr:
-    #container_name: notifiarr
-    #hostname: notifiarr
-    #image: golift/notifiarr
-    #restart: unless-stopped
-    #ports:
-    #  - "5454:5454"
-    #volumes:
-    #  - ${DATA_PATH:-/data}/notifiarr:/config
-    #  - /var/run/utmp:/var/run/utmp
-    #  - /etc/machine-id:/etc/machine-id
-    #networks:
-    #  - proxy_network
+  notifiarr:
+    container_name: notifiarr
+    hostname: notifiarr
+    image: golift/notifiarr
+    restart: unless-stopped
+    ports:
+      - "5454:5454"
+    volumes:
+      - ${CONFIG_PATH:-/opt/docker}/media/notifiarr:/config
+      - /var/run/utmp:/var/run/utmp
+      - /etc/machine-id:/etc/machine-id
+    networks:
+      - proxy_network
+
 networks:
   proxy_network: 
     external: true
