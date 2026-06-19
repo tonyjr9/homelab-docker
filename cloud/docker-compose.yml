@@ -15,14 +15,23 @@ services:
     networks:
       - proxy_network
 
-  seafile-memcached:
-    image: memcached:1.6
-    container_name: seafile-memcached
+#  seafile-memcached:
+      #    image: memcached:1.6
+      #    container_name: seafile-memcached
+      #    restart: unless-stopped
+      #    networks:
+      #      proxy_network:
+      #        aliases: 
+      #          - memcached
+
+  seafile-redis:
+    image: redis:7-alpine
+    container_name: seafile-redis
     restart: unless-stopped
     networks:
       proxy_network:
-        aliases: 
-          - memcached
+        aliases:
+          - redis
 
   seafile:
     image: seafileltd/seafile-mc:13.0.15
@@ -30,7 +39,7 @@ services:
     restart: unless-stopped
     depends_on:
       - seafile-db
-      - seafile-memcached
+      - seafile-redis
     volumes:
       - /mnt/media/cloud/seafile/data:/shared
     environment:
@@ -47,7 +56,6 @@ services:
       JWT_PRIVATE_KEY: ${JWT_PRIVATE_KEY}
       SEAFILE_SERVER_HOSTNAME: ${SEAFILE_SERVER_HOSTNAME}
 
-      
       #INIT_SEAFILE_MYSQL_ROOT_PASSWORD: ${SEAFILE_DB_ROOT_PASSWORD}
       #SEAFILE_ADMIN_EMAIL: ${SEAFILE_ADMIN_EMAIL}
       #SEAFILE_ADMIN_PASSWORD: ${SEAFILE_ADMIN_PASSWORD}

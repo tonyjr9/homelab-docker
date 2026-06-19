@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  altserver:
+    # Optional build configuration 
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
+    image: dreth/altserver-docker:latest
+    container_name: altserver
+    volumes:
+      - "./lib:/root/.config/Provision/lib"
+      - "./bin:/altserver/bin"
+      - "./logs:/altserver/logs"
+      - "/dev/bus/usb:/dev/bus/usb"
+      - "/var/lib/lockdown:/var/lib/lockdown"
+      - "/var/run:/var/run"
+      - "/sys/fs/cgroup:/sys/fs/cgroup:ro"
+    network_mode: host
+    # Optional environment variables to override the default architecture
+    # for the altserver, netmuxd, and anisette binaries.
+    devices:
+      - "/dev/bus/usb/001/011:/dev/bus/usb/001/011"
+    environment:
+       - OVERRIDE_ALTSERVER_ARCH=x86_64
+       - OVERRIDE_NETMUXD_ARCH=x86_64
+       - OVERRIDE_ANISETTE_ARCH=x86_64
+       - OVERRIDE_PROVISION_LIBS_ARCH=x86_64
+       - ALLOW_PROVISION_TO_DOWNLOAD_LIBS=true
+    privileged: true
+    restart: unless-stopped
