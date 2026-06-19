@@ -4,6 +4,10 @@ docker-data/
 # OpenVPN data
 vpn/openvpn-data
 
+altserver/bin
+altserver/lib
+altserver/scripts
+
 # Environment variables and secrets
 .env
 .env.local
