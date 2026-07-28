@@ -115,7 +115,7 @@ services:
       - ${MEDIA_PATH:-/mnt/media}/media/movies:/movies
       - ${MEDIA_PATH:-/mnt/media}/media/transmission/downloads/complete:/downloads
     ports:
-      - 7878:7878
+      - 192.168.0.200:7878:7878
     restart: unless-stopped
     networks:
       - proxy_network

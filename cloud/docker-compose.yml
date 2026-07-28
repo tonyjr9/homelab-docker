@@ -69,6 +69,36 @@ services:
     networks:
       - proxy_network
 
+  zennotes:
+    image: adibhanna/zennotes:latest
+    container_name: zennotes
+    restart: unless-stopped
+    ports:
+      - 192.168.0.102:7878:7878
+    user: "1000:1000"
+    environment:
+      ZENNOTES_AUTH_TOKEN: "${ZENNOTES_AUTH_TOKEN}"
+      # Optional: lock the server to a specific vault path (disables in-app vault switching)
+      # ZENNOTES_VAULT_PATH: "/workspace"
+      # Optional: set a default vault without locking (vault picker still works)
+      ZENNOTES_DEFAULT_VAULT_PATH: "/workspace"
+      # Optional: restrict what the vault picker can browse to the mounted workspace
+      ZENNOTES_BROWSE_ROOTS: "/workspace"
+      # Optional: explicitly allow the origin connecting to this server (e.g. desktop app)
+      # ZENNOTES_ALLOWED_ORIGINS: "http://localhost:7878"
+    volumes:
+      # Your Markdown vault — maps the host path into /workspace inside the container
+      - "/mnt/media/notes/Documents/MyVault:/workspace"
+      # Persistent server config (auth token, session state, server.json)
+      - "/mnt/media/notes/zennotes-data:/data"
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
 networks:
   proxy_network: 
     external: true
