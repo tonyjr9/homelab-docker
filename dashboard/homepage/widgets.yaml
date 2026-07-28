@@ -1,0 +1,17 @@
+---
+- resources:
+    cpu: true
+    memory: true
+    disk: /
+    label: Main Server
+
+- datetime:
+    text_size: xl
+    format:
+      dateStyle: long
+      timeStyle: short
+      hour12: false
+
+- search:
+    provider: duckduckgo
+    target: _blank

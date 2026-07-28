@@ -1,0 +1,33 @@
+---
+title: Pedro's Homelab
+description: My self-hosted server dashboard
+startUrl: http://home.topedroserver.duckdns.org
+
+theme: dark
+color: slate
+
+layout:
+  Media:
+    style: row
+    columns: 3
+  Downloads & Indexing:
+    style: row
+    columns: 4
+  Cloud & Storage:
+    style: row
+    columns: 2
+  Network:
+    style: row
+    columns: 4
+  Monitoring:
+    style: row
+    columns: 1
+  Gaming & Misc:
+    style: row
+    columns: 4
+
+quicklaunch:
+  searchDescriptions: true
+  hideInternetSearch: false
+  showSearchSuggestions: true
+  hideVisitURL: false

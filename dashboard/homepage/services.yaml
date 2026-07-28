@@ -1,0 +1,156 @@
+---
+# Homepage Services Configuration
+# Generated from tonyjr9/homelab-docker stack
+
+- Media:
+    - Jellyfin:
+        icon: jellyfin.png
+        href: http://192.168.0.102:8096
+        description: Media server
+        widget:
+          type: jellyfin
+          url: http://jellyfin:8096
+          key: "YOUR_JELLYFIN_API_KEY"
+          enableBlocks: true
+          enableNowPlaying: true
+
+    - Plex:
+        icon: plex.png
+        href: http://192.168.0.102:32400/web
+        description: Media server (Plex)
+        widget:
+          type: plex
+          url: http://plex:32400
+          key: "YOUR_PLEX_TOKEN"
+
+    - Seerr:
+        icon: overseerr.png
+        href: http://192.168.0.102:5055
+        description: Media requests
+        widget:
+          type: overseerr
+          url: http://seerr:5055
+          key: "YOUR_SEERR_API_KEY"
+
+- Downloads & Indexing:
+    - Transmission:
+        icon: transmission.png
+        href: http://192.168.0.102:9091
+        description: Torrent client
+        widget:
+          type: transmission
+          url: http://192.168.0.102:9091
+          username: "YOUR_TRANSMISSION_USER"
+          password: "YOUR_TRANSMISSION_PASS"
+
+    - Radarr:
+        icon: radarr.png
+        href: http://192.168.0.200:7878
+        description: Movie manager
+        widget:
+          type: radarr
+          url: http://192.168.0.200:7878
+          key: "YOUR_RADARR_API_KEY"
+
+    - Sonarr:
+        icon: sonarr.png
+        href: http://192.168.0.102:8989
+        description: TV series manager
+        widget:
+          type: sonarr
+          url: http://sonarr:8989
+          key: "YOUR_SONARR_API_KEY"
+
+    - Prowlarr:
+        icon: prowlarr.png
+        href: http://192.168.0.102:9696
+        description: Indexer manager
+        widget:
+          type: prowlarr
+          url: http://prowlarr:9696
+          key: "YOUR_PROWLARR_API_KEY"
+
+    - Notifiarr:
+        icon: notifiarr.png
+        href: http://192.168.0.102:5454
+        description: Notification hub
+
+- Cloud & Storage:
+    - Seafile:
+        icon: seafile.png
+        href: http://192.168.0.200:80
+        description: Self-hosted cloud storage
+
+    - ZenNotes:
+        icon: obsidian.png
+        href: http://192.168.0.102:7878
+        description: Obsidian remote vault
+
+- Network:
+    - Nginx Proxy Manager:
+        icon: nginx-proxy-manager.png
+        href: http://192.168.0.197:81
+        description: Reverse proxy
+        widget:
+          type: npm
+          url: http://npm:81
+          username: "YOUR_NPM_EMAIL"
+          password: "YOUR_NPM_PASS"
+
+    - Pi-hole:
+        icon: pi-hole.png
+        href: http://192.168.0.198:80/admin
+        description: Network-wide ad blocker
+        widget:
+          type: pihole
+          url: http://192.168.0.198:80
+          key: "YOUR_PIHOLE_API_KEY"
+
+    - WireGuard Easy:
+        icon: wireguard.png
+        href: http://192.168.0.102:51821
+        description: VPN management
+        widget:
+          type: wgeasy
+          url: http://wg-easy:51821
+          username: "YOUR_WG_USER"
+          password: "YOUR_WG_PASS"
+
+    - DDNS Updater:
+        icon: ddns-updater.png
+        href: http://192.168.0.102:8000
+        description: DuckDNS updater
+        widget:
+          type: ddnsupdater
+          url: http://ddns-updater:8000
+
+- Monitoring:
+    - Beszel:
+        icon: si-speedtest
+        href: http://192.168.0.102:8090
+        description: Server monitoring
+
+- Gaming & Misc:
+    - Minecraft (Main):
+        icon: minecraft.png
+        href: "#"
+        description: Minecraft server
+
+    - Minecraft (Keith):
+        icon: minecraft.png
+        href: "#"
+        description: Minecraft server (Keith)
+
+    - OctoPrint:
+        icon: octoprint.png
+        href: http://192.168.0.102:5000
+        description: 3D printer control
+        widget:
+          type: octoprint
+          url: http://octoprint:5000
+          key: "YOUR_OCTOPRINT_API_KEY"
+
+    - AltServer:
+        icon: si-apple
+        href: "#"
+        description: iOS app sideloading
