@@ -28,3 +28,6 @@ openvpn-data
 *.ovpn
 client-configs
 openvpn-data
+
+# wireguard
+wireguard-data
