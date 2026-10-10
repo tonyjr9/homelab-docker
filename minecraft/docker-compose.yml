@@ -1,0 +1,25 @@
+services:
+  mc-vanilla:
+    image: itzg/minecraft-server
+    container_name: mc-vanilla
+    restart: unless-stopped
+    ports:
+      - "25565:25565"     
+    environment:
+      EULA: "TRUE"
+      TYPE: "FABRIC"
+      VERSION: "1.21.11"
+      MEMORY: "4G"          
+      ENABLE_WHITELIST: "FALSE"
+      ONLINE_MODE: "FALSE" 
+    volumes:
+      #- ${MEDIA_PATH:-/mnt/raid5}/minecraft/data:/data
+      - ./data:/data
+    stdin_open: true
+    tty: true
+    networks:
+      - proxy_network
+
+networks:
+  proxy_network:
+    external: true

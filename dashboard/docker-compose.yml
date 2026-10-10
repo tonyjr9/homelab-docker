@@ -1,0 +1,35 @@
+services:
+  homepage:
+    image: ghcr.io/gethomepage/homepage:latest
+    container_name: homepage
+    ports:
+      - "${MAIN_IP}:3000:3000"
+    volumes:
+      - ./homepage:/app/config
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    env_file:
+      - .env
+    environment:
+      HOMEPAGE_ALLOWED_HOSTS: "${MAIN_IP}:3000,home.topedroserver.duckdns.org"
+      HOMEPAGE_EXTERNAL_URL: https://home.topedroserver.duckdns.org
+      PUID: "${PUID}"
+      PGID: "${PGID}"
+      HOMEPAGE_VAR_BESZEL_KEY: "${BESZEL_KEY}"
+      HOMEPAGE_VAR_BESZEL_TOKEN: "${BESZEL_TOKEN}"
+      HOMEPAGE_VAR_JELLYFIN_KEY: "${JELLYFIN_KEY}"
+      HOMEPAGE_VAR_PLEX_CLAIM_TOKEN: "${PLEX_CLAIM_TOKEN}"
+      HOMEPAGE_VAR_SEERR_KEY: "${SEERR_KEY}"
+      HOMEPAGE_VAR_RADARR_API_KEY: "${RADARR_API_KEY}"
+      HOMEPAGE_VAR_SONARR_API_KEY: "${SONARR_API_KEY}"
+      HOMEPAGE_VAR_PROWLARR_API_KEY: "${PROWLARR_API_KEY}"
+      HOMEPAGE_VAR_PIHOLE_API_KEY: "${PIHOLE_API_KEY}"
+      HOMEPAGE_VAR_UNIFI_API_KEY: "${UNIFI_API_KEY}"
+      HOMEPAGE_VAR_NPM_USERNAME: "${NPM_USERNAME}"
+      HOMEPAGE_VAR_NPM_PASSWORD: "${NPM_PASSWORD}"
+    networks:
+      - proxy_network
+
+networks:
+  proxy_network:
+    external: true
+    name: proxy_network

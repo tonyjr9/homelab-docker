@@ -1,0 +1,172 @@
+---
+services:
+  plex:
+    image: lscr.io/linuxserver/plex:latest
+    container_name: plex
+    network_mode: host
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - VERSION=docker
+      - PLEX_CLAIM=${PLEX_CLAIM_TOKEN}
+      - TZ=${TZ:-Europe/Lisbon}
+    devices:
+      - /dev/dri:/dev/dri
+    #ports:
+    #  - 32400:32400
+    volumes:
+      - ${CONFIG_PATH:-/opt/docker}/media/plex/config:/config
+      - ${MEDIA_PATH:-/mnt/raid5}/media/movies:/data/movies
+      - ${MEDIA_PATH:-/mnt/raid5}/media/tvseries:/data/tv
+    restart: unless-stopped
+
+  jellyfin:
+    image: lscr.io/linuxserver/jellyfin:latest
+    container_name: jellyfin
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-Europe/Lisbon}
+      - JELLYFIN_PublishedServerUrl=https://your-subdomain.duckdns.org
+    volumes:
+      - ./jellyfin/config:/config
+      - ./jellyfin/cache:/cache
+      - ${MEDIA_PATH:-/mnt/raid5}/media/movies:/data/movies
+      - ${MEDIA_PATH:-/mnt/raid5}/media/tvseries:/data/tv
+    ports:
+      - '${MAIN_IP}:8096:8096/tcp'
+      - '${MAIN_IP}:7359:7359/udp'
+    restart: unless-stopped
+    networks:
+      - proxy_network
+
+  transmission:
+    image: lscr.io/linuxserver/transmission:latest
+    container_name: transmission
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TRANSMISSION_SCRIPT_TORRENT_DONE_ENABLED=true
+      - TRANSMISSION_SCRIPT_TORRENT_DONE_FILENAME=/config/scripts/torrent-done.sh
+    volumes:
+      - ${CONFIG_PATH:-/opt/docker}/media/transmission/config:/config
+      - ${MEDIA_PATH:-/mnt/raid5}/media/transmission/downloads:/downloads
+      - ${MEDIA_PATH:-/mnt/raid5}/media/transmission/watch:/watch
+    restart: unless-stopped
+    ports:
+      - '${MAIN_IP}:9091:9091'
+      - '${MAIN_IP}:51413:51413'
+      - '${MAIN_IP}:51413:51413/udp'
+    networks:
+      - proxy_network 
+
+  unpackerr:
+    image: golift/unpackerr
+    container_name: unpackerr
+    user: 1000:1000
+    volumes:
+      - ${MEDIA_PATH:-/mnt/raid5}/media/transmission/downloads/complete:/downloads
+    restart: unless-stopped
+    environment:
+      - TZ=${TZ:-Europe/Lisbon}
+      - UN_LOG_FILE=/downloads/unpackerr.log
+      # Sonarr
+      - UN_SONARR_0_URL=http://sonarr:8989
+      - UN_SONARR_0_API_KEY=${SONARR_API_KEY}
+      - UN_SONARR_0_PATHS_0=/downloads
+      # Radarr
+      - UN_RADARR_0_URL=http://radarr:7878
+      - UN_RADARR_0_API_KEY=${RADARR_API_KEY}
+      - UN_RADARR_0_PATHS_0=/downloads
+    networks:
+      - proxy_network
+
+  seerr:
+    image: ghcr.io/seerr-team/seerr:latest
+    init: true
+    container_name: seerr
+    environment:
+      - LOG_LEVEL=debug
+      - TZ=${TZ:-Europe/Lisbon}
+      - PORT=5055 #optional
+    ports:
+      - '${MAIN_IP}:5055:5055'
+    volumes:
+      - ./seerr/config:/app/config
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:5055/api/v1/status || exit 1
+      start_period: 20s
+      timeout: 3s
+      interval: 15s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - proxy_network
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-Europe/Lisbon}
+    volumes:
+      - ./radar/data:/config
+      - ${MEDIA_PATH:-/mnt/raid5}/media/movies:/movies
+      - ${MEDIA_PATH:-/mnt/raid5}/media/transmission/downloads/complete:/downloads
+    ports:
+      - '${MAIN_IP}:7878:7878'
+    restart: unless-stopped
+    networks:
+      - proxy_network
+      
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    environment:
+      - PUID=${PUID:-1000}
+      - PGID=${PGID:-1000}
+      - TZ=${TZ:-Europe/Lisbon}
+    volumes:
+      - ./sonarr/config:/config
+      - ${MEDIA_PATH:-/mnt/raid5}/media/tvseries:/tv
+      - ${MEDIA_PATH:-/mnt/raid5}/media/transmission/downloads/complete:/downloads
+    ports:
+      - ${MAIN_IP}:8989:8989
+    restart: unless-stopped
+    networks:
+      - proxy_network
+
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowllar
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - ./prowllar/config:/config
+    ports:
+      - '${MAIN_IP}:9696:9696'
+    restart: unless-stopped
+    networks:
+      - proxy_network
+  
+  notifiarr:
+    container_name: notifiarr
+    hostname: notifiarr
+    image: golift/notifiarr
+    restart: unless-stopped
+    ports:
+      - "${MAIN_IP}:5454:5454"
+    volumes:
+      - ${CONFIG_PATH:-/opt/docker}/media/notifiarr:/config
+      - /var/run/utmp:/var/run/utmp
+      - /etc/machine-id:/etc/machine-id
+    networks:
+      - proxy_network
+
+networks:
+  proxy_network: 
+    external: true
+    name: proxy_network

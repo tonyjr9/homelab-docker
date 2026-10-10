@@ -1,0 +1,13 @@
+services:
+  seafile-memcached:
+    image: memcached:1.6
+    container_name: seafile-memcached
+    restart: unless-stopped
+    networks:
+      proxy_network:
+        aliases:
+          - memcached
+
+networks:
+  proxy_network:
+    external: true

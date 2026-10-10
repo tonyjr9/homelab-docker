@@ -1,0 +1,106 @@
+---
+services:
+  npm:
+    container_name: npm
+    image: 'jc21/nginx-proxy-manager:latest'
+    restart: unless-stopped
+    ports:
+      # These ports are in format <host-port>:<container-port>
+      - '${NPM_IP}:80:80' # Public HTTP Port
+      - '${NPM_IP}:443:443' # Public HTTPS Port
+      - '${NPM_IP}:81:81' # Admin Web Port
+    volumes:
+      - ${CONFIG_PATH:-/opt/docker}/network/data:/data
+      - ${CONFIG_PATH:-/opt/docker}/network/letsencrypt:/etc/letsencrypt
+    networks:
+      - pihole
+      - proxy_network
+      - radarr_network
+    
+  pihole:
+    container_name: pihole
+    image: pihole/pihole:latest
+    ports:
+      - "${PIHOLE_IP}:80:80/tcp"
+      - "${PIHOLE_IP}:443:443/tcp"
+      - "${PIHOLE_IP}:53:53/tcp"
+      - "${PIHOLE_IP}:53:53/udp"
+    environment:
+      TZ: ${TZ:-Europe/Lisbon}
+      WEBPASSWORD: ${PIHOLE_PASSWORD}
+      FTLCONF_dns_listeningMode: 'all'
+    volumes:
+      - './etc-pihole:/etc/pihole'
+      - './etc-dnsmasq.d:/etc/dnsmasq.d'
+    restart: unless-stopped
+
+
+  ddns-updater:
+    image: qmcgaw/ddns-updater:latest
+    container_name: ddns-updater
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=${TZ:-Europe/Lisbon}
+      - PERIOD=5m
+      - UPDATE_COOLDOWN_PERIOD=5m
+      - CONFIG={"settings":[{"provider":"duckdns","domain":"${DUCKDNS_DOMAIN}","token":"${DUCKDNS_TOKEN}","ip_version":"ipv4"}]}
+    volumes:
+      - ./ddns/data:/updater/data
+    ports:
+      - ${MAIN_IP}:8000:8000
+    restart: unless-stopped
+    networks:
+      - proxy_network
+
+  wg-easy:
+    image: ghcr.io/wg-easy/wg-easy:15
+    environment:
+      - INIT_ENABLED=true
+      - INIT_USERNAME=${WG_USER}
+      - INIT_PASSWORD=${WG_PASS}
+      - INIT_HOST=${DUCK_DOMAIN}
+      - INIT_PORT=${WG_PORT}
+      - INIT_DNS=${PIHOLE_IP}
+      - INIT_IPV4_CIDR=10.8.0.0/24
+      - INIT_IPV6_CIDR=fd00:0:0:1::/64
+      - INIT_ALLOWED_IPS=192.168.20.0/24,0.0.0.0/0
+    container_name: wg-easy
+    restart: unless-stopped
+    networks:
+      wg:
+        ipv4_address: 10.42.42.42
+        ipv6_address: fdcc:ad94:bacf:61a3::2a
+      proxy_network:
+    volumes:
+      - ./wireguard-data:/etc/wireguard
+      - /lib/modules:/lib/modules:ro
+    ports:
+      - 51820:51820/udp
+      - 51821:51821/tcp
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.src_valid_mark=1
+      - net.ipv6.conf.all.disable_ipv6=0
+      - net.ipv6.conf.all.forwarding=1
+      - net.ipv6.conf.default.forwarding=1
+
+
+
+networks:
+  pihole:
+  proxy_network:
+    external: true
+  radarr_network:
+    external: true
+  wg:
+    driver: bridge
+    enable_ipv6: true
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.42.42.0/24
+        - subnet: fdcc:ad94:bacf:61a3::/64

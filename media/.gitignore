@@ -1,0 +1,11 @@
+immich
+jellyfin
+overseer
+plex
+prowlarr
+radar
+sonarr
+tautulli
+transmission
+*.env
+seerr

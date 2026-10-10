@@ -1,0 +1,13 @@
+---
+- Server Links:
+    - DuckDNS Dashboard:
+        - href: https://www.duckdns.org
+          icon: duckdns.png
+    - GitHub Homelab Repo:
+        - href: https://github.com/tonyjr9/homelab-docker
+          icon: github.png
+
+- External Access:
+    - Homepage (external):
+        - href: https://home.topedroserver.duckdns.org
+          icon: homepage.png

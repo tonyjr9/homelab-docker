@@ -1,0 +1,131 @@
+---
+- Media:
+    - Jellyfin:
+        icon: jellyfin.png
+        href: https://jellyfin.topedroserver.duckdns.org
+        description: Media server
+        widget:
+          type: jellyfin
+          url: http://192.168.20.102:8096
+          key: "{{HOMEPAGE_VAR_JELLYFIN_KEY}}"
+          enableBlocks: true
+          enableNowPlaying: true
+
+    - Plex:
+        icon: plex.png
+        href: https://plex.topedroserver.duckdns.org
+        description: Watch films and shows
+        widget:
+          type: plex
+          url: http://192.168.20.102:32400
+          key: "{{HOMEPAGE_VAR_PLEX_CLAIM_TOKEN}}"
+
+    - Seerr:
+        icon: overseerr.png
+        href: https://seerr.topedroserver.duckdns.org
+        description: Media requests
+        widget:
+          type: overseerr
+          url: http://192.168.20.102:5055
+          key: "{{HOMEPAGE_VAR_SEERR_KEY}}"
+
+- Downloads & Indexing:
+    - Transmission:
+        icon: transmission.png
+        href: https://torrent.topedroserver.duckdns.org
+        description: Torrent client
+
+    - Radarr:
+        icon: radarr.png
+        href: https://radarr.topedroserver.duckdns.org
+        description: Movie manager
+        widget:
+          type: radarr
+          url: http://192.168.20.102:7878
+          key: "{{HOMEPAGE_VAR_RADARR_API_KEY}}"
+
+    - Sonarr:
+        icon: sonarr.png
+        href: https://sonarr.topedroserver.duckdns.org
+        description: TV series manager
+        widget:
+          type: sonarr
+          url: http://192.168.20.102:8989
+          key: "{{HOMEPAGE_VAR_SONARR_API_KEY}}"
+
+    - Prowlarr:
+        icon: prowlarr.png
+        href: https://prowlarr.topedroserver.duckdns.org
+        description: Indexer manager
+        widget:
+          type: prowlarr
+          url: http://192.168.20.102:9696
+          key: "{{HOMEPAGE_VAR_PROWLARR_API_KEY}}"
+
+- Cloud & Storage:
+    - Seafile:
+        icon: seafile.png
+        href: https://seafile.topedroserver.duckdns.org
+        description: Self-hosted cloud storage
+
+    - ZenNotes:
+        icon: obsidian.png
+        href: http://192.168.20.102:7878
+        description: Obsidian remote vault
+
+- Network:
+    - Nginx Proxy Manager:
+        icon: nginx-proxy-manager.png
+        href: http://192.168.20.197:81
+        description: Reverse proxy
+        widget:
+          type: npm
+          url: http://192.168.20.197:81
+          username: "{{HOMEPAGE_VAR_NPM_USERNAME}}"
+          password: "{{HOMEPAGE_VAR_NPM_PASSWORD}}"
+
+    - Pi-hole:
+        icon: pi-hole.png
+        href: http://192.168.20.198:80/admin
+        description: Network-wide ad blocker
+        widget:
+          type: pihole
+          url: http://192.168.20.198:80
+          key: "{{HOMEPAGE_VAR_PIHOLE_API_KEY}}"
+
+    - WireGuard Easy:
+        icon: wireguard.png
+        href: http://192.168.20.102:51821
+        description: VPN management
+
+    - DDNS Updater:
+        icon: ddns-updater.png
+        href: http://192.168.20.102:8000
+        description: DuckDNS updater
+
+- Monitoring:
+    - Beszel:
+        icon: si-speedtest
+        href: https://beszel.topedroserver.duckdns.org
+        description: Server monitoring
+
+- Gaming & Misc:
+    - Minecraft (Main):
+        icon: minecraft.png
+        href: "#"
+        description: Minecraft server
+
+    - Minecraft (Keith):
+        icon: minecraft.png
+        href: "#"
+        description: Minecraft server (Keith)
+
+    - OctoPrint:
+        icon: octoprint.png
+        href: http://192.168.20.102:5000
+        description: 3D printer control
+
+    - AltServer:
+        icon: si-apple
+        href: "#"
+        description: iOS app sideloading

@@ -1,0 +1,95 @@
+services:
+  # --- Seafile (server + DB + cache) ---
+  seafile-db:
+    image: mariadb:10.11
+    container_name: seafile-db
+    restart: unless-stopped
+    hostname: seafile-db
+    environment:
+      SEAFILE_MYSQL_DB_USER: ${SEAFILE_MYSQL_DB_USER}
+      MYSQL_ROOT_PASSWORD: ${INIT_SEAFILE_MYSQL_ROOT_PASSWORD}
+      MYSQL_LOG_CONSOLE: "true"
+      MARIADB_AUTO_UPGRADE: "1"
+    volumes:
+      - ${MEDIA_PATH:-/mnt/raid5}/cloud/seafile/db:/var/lib/mysql
+    networks:
+      - proxy_network
+
+  seafile-redis:
+    image: redis:7-alpine
+    container_name: seafile-redis
+    restart: unless-stopped
+    networks:
+      proxy_network:
+        aliases:
+          - redis
+
+  seafile:
+    image: seafileltd/seafile-mc:13.0.15
+    container_name: seafile
+    restart: unless-stopped
+    depends_on:
+      - seafile-db
+      - seafile-redis
+    volumes:
+      - ${MEDIA_PATH:-/mnt/raid5}/cloud/seafile/data:/shared
+    environment:
+      SEAFILE_MYSQL_DB_HOST: ${SEAFILE_MYSQL_DB_HOST}
+      SEAFILE_MYSQL_DB_PORT: "${SEAFILE_MYSQL_DB_PORT}"
+      SEAFILE_MYSQL_DB_USER: ${SEAFILE_MYSQL_DB_USER}
+      SEAFILE_MYSQL_DB_CCNET_DB_NAME: ${SEAFILE_MYSQL_DB_CCNET_DB_NAME}
+      SEAFILE_MYSQL_DB_SEAFILE_DB_NAME: ${SEAFILE_MYSQL_DB_SEAFILE_DB_NAME}
+      SEAFILE_MYSQL_DB_SEAHUB_DB_NAME: ${SEAFILE_MYSQL_DB_SEAHUB_DB_NAME}
+      INIT_SEAFILE_MYSQL_ROOT_PASSWORD: ${INIT_SEAFILE_MYSQL_ROOT_PASSWORD}
+      SEAFILE_MYSQL_DB_PASSWORD: ${SEAFILE_MYSQL_DB_PASSWORD}
+      INIT_SEAFILE_ADMIN_EMAIL: ${INIT_SEAFILE_ADMIN_EMAIL}
+      INIT_SEAFILE_ADMIN_PASSWORD: ${INIT_SEAFILE_ADMIN_PASSWORD}
+      JWT_PRIVATE_KEY: ${JWT_PRIVATE_KEY}
+      SEAFILE_SERVER_HOSTNAME: ${SEAFILE_SERVER_HOSTNAME}
+
+      #INIT_SEAFILE_MYSQL_ROOT_PASSWORD: ${SEAFILE_DB_ROOT_PASSWORD}
+      #SEAFILE_ADMIN_EMAIL: ${SEAFILE_ADMIN_EMAIL}
+      #SEAFILE_ADMIN_PASSWORD: ${SEAFILE_ADMIN_PASSWORD}
+      #SEAFILE_SERVER_HOSTNAME: ${SEAFILE_SERVER_HOSTNAME}
+      # If running behind HTTPS reverse proxy, you may also want:
+      SEAFILE_SERVER_LETSENCRYPT: false 
+      FORCE_HTTPS_IN_CONF: false
+      #
+    ports:
+      - "${MAIN_IP}:80:80"
+    networks:
+      - proxy_network
+
+  zennotes:
+    image: adibhanna/zennotes:latest
+    container_name: zennotes
+    restart: unless-stopped
+    ports:
+      - '${MAIN_IP}:7878:7878'
+    user: "1000:1000"
+    environment:
+      ZENNOTES_AUTH_TOKEN: "${ZENNOTES_AUTH_TOKEN}"
+      # Optional: lock the server to a specific vault path (disables in-app vault switching)
+      # ZENNOTES_VAULT_PATH: "/workspace"
+      # Optional: set a default vault without locking (vault picker still works)
+      ZENNOTES_DEFAULT_VAULT_PATH: "/workspace"
+      # Optional: restrict what the vault picker can browse to the mounted workspace
+      ZENNOTES_BROWSE_ROOTS: "/workspace"
+      # Optional: explicitly allow the origin connecting to this server (e.g. desktop app)
+      # ZENNOTES_ALLOWED_ORIGINS: "http://localhost:7878"
+    volumes:
+      # Your Markdown vault — maps the host path into /workspace inside the container
+      - "${MEDIA_PATH:-/mnt/raid5}/notes/Documents/MyVault:/workspace"
+      # Persistent server config (auth token, session state, server.json)
+      - "${CONFIG_PATH:-/opt/docker}/cloud/zennotes-data:/data"
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
+networks:
+  proxy_network: 
+    external: true
