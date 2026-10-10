@@ -1,4 +1,0 @@
----
-# Docker socket integration for container status badges
-my-server:
-  socket: /var/run/docker.sock

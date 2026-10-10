@@ -1,22 +1,19 @@
 services:
-  mc-vanilla:
+  mc-vanilla-keith:
     image: itzg/minecraft-server
-    container_name: mc-vanilla
+    container_name: mc-vanilla-keith
     restart: unless-stopped
     ports:
-      - "25565:25565"     
+      - "25567:25565" 
     environment:
       EULA: "TRUE"
-      TYPE: "FABRIC"
+      TYPE: "VANILLA"
       VERSION: "1.21.11"
-      MEMORY: "4G"          
+      MEMORY: "4G"         
       ENABLE_WHITELIST: "FALSE"
-      ONLINE_MODE: "FALSE" 
+      ONLINE_MODE: "FALSE"
     volumes:
-      #- ${MEDIA_PATH:-/mnt/raid5}/minecraft/data:/data
       - ./data:/data
-    stdin_open: true
-    tty: true
     networks:
       - proxy_network
 
