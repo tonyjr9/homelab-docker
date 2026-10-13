@@ -32,6 +32,7 @@
 **/radarr/
 **/prowlarr/
 **/seerr/
+**/db/
 **/notifiarr/
 **/minecraft/data/
 **/minecraft/world/
