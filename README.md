@@ -51,8 +51,8 @@ Debian Server
     +-- Dedicated bridge for Home Assistant KVM/libvirt
     |
     +-- Docker Stack (proxy_network)
-    |   ├── Nginx Proxy Manager  :80/443/81  (192.168.0.197)
-    |   ├── Pi-hole              :53/80      (192.168.0.198)
+    |   ├── Nginx Proxy Manager  :80/443/81  (server VLAN address)
+    |   ├── Pi-hole              :53/80      (server VLAN address)
     |   ├── DDNS Updater         :8000
     |   ├── Homarr               :7575
     |   ├── Dashdot              :3001
@@ -74,7 +74,7 @@ Debian Server
 | Method | Example |
 |--------|---------|
 | Local via NPM | `https://subdomain.domain.duckdns.org` |
-| Local direct IP | `http://192.168.0.102:7575` |
+| Local direct IP | `http://<server-address>:7575` |
 | Remote VPN | Connect to WireGuard on the UGM → access Management and permitted server services |
 | Public (optional) | Domain via NPM + Let's Encrypt, or Cloudflare Tunnel (Paid domain recommended) |
 
@@ -85,7 +85,7 @@ Click on the directory to see the corresponding README
 
 | Stack | Directory | Details |
 |-------|-----------|--------|
-| Reverse proxy, Pi-hole, DDNS | [`network/`](./network/README.md) | UGM VLAN, firewall, WireGuard, and host networking |
+| Reverse proxy, Pi-hole, DDNS | [`network/`](./network/README.md) | UGM VLANs, firewall, WireGuard, and host networking |
 | Homarr dashboard, Dashdot | [`dashboard/`](./dashboard/README.md) | Dashboards & monitoring |
 | Seafile (+ MariaDB + Memcached) | [`cloud/`](./cloud/README.md) | Self-hosted cloud storage |
 | Transmission, Plex, Jellyfin, Radarr, Sonarr, Prowlarr, Overseerr | [`media/`](./media/README.md) | Media & downloads |
