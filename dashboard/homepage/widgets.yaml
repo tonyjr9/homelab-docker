@@ -12,6 +12,20 @@
       timeStyle: short
       hour12: false
 
+- openmeteo:
+    label: Porto
+    latitude: 41.15
+    longitude: -8.61
+    units: metric
+
+- unify:
+    icon: unifi.svg
+    href: https://192.168.2.1
+    widget:
+      type: unifi
+      url: https://192.168.2.1
+      key: "{{HOMEPAGE_VAR_UNIFI_API_KEY}}"
+
 - search:
     provider: duckduckgo
     target: _blank

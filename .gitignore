@@ -1,159 +1,79 @@
-# Updated .gitignore including all data directories and .env files
-docker-data/
-
-# OpenVPN data
-vpn/openvpn-data
-
-altserver/bin
-altserver/lib
-altserver/scripts
-
-# Environment variables and secrets
+# Local environment files and secrets
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
 *.env
-.env.example  # Keep example tracked, but local .env ignored
-env.sh
+*.ovpn
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
 
-# Database files
+# Runtime and generated service data
+**/config/
+**/data/
+**/logs/
+**/cache/
+**/backups/
+**/letsencrypt/
+**/etc-pihole/
+**/etc-dnsmasq.d/
+**/ddns/data/
+**/wireguard-data/
+**/openvpn-data/
+**/beszel_*/
+**/immich/
+**/plex/
+**/jellyfin/
+**/transmission/
+**/sonarr/
+**/radar/
+**/radarr/
+**/prowlarr/
+**/seerr/
+**/db/
+**/notifiarr/
+**/minecraft/data/
+**/minecraft/world/
+**/minecraft_keith/data/
+**/altserver/bin/
+**/altserver/lib/
+**/altserver/logs/
+**/altserver/scripts/
+
+# Databases and transient files
 *.db
 *.sqlite
 *.sqlite3
 *.sql
 *.sql.gz
-
-# SSL/TLS Certificates and keys
-*.pem
-*.key
-*.crt
-*.cert
-*.cer
-letsencrypt/
-certs/
-ssl/
-
-# SSH keys
-*.pub
-id_rsa
-id_dsa
-id_ecdsa
-id_ed25519
-.ssh/
-
-# Runtime data directories
-config/
-data/
-db/
-logs/
-*.log
-state/
-
-# Docker volumes
-volumes/
-
-# Service-specific data (not tracked)
-
-# Proxy
-proxy/data/
-proxy/letsencrypt/
-proxy/etc-pihole/
-proxy/etc-dnsmasq.d/
-proxy/ddns/data/
-proxy/*.env
-
-# Dashboard
-dashboard/configs/
-dashboard/data/
-dashboard/icons/
-dashboard/imgs/
-dashboard/beszel_data/
-dashboard/beszel_agent_data/
-dashboard/beszel_socket/
-dashboard/beszel_agent_data/
-dashboard/*.env
-
-
-# Nextcloud
-nextcloud/config/
-nextcloud/data/
-nextcloud/db/
-nextcloud/nextcloud.env
-nextcloud/old/
-nextcloud/*.env
-
-# Media
-media/transmission
-media/config
-media/overseer
-media/plex
-media/immich
-media/tautulli
-media/*.env
-
-# Syncthing
-syncthing/config/
-syncthing/*.env
-
-# Minecraft
-minecraft/world/
-minecraft/server.properties
-minecraft/*.env
-
-# Cloud (future/new)
-cloud/*/
-cloud/*.env
-
-# Backups
-backups/
-*.tar
-*.tar.gz
-*.zip
 *.bak
-*_backup.*
+*.tmp
+*.pid
+*.log
+*~
+.DS_Store
 
-# Large media files
+# Local tooling
+.vscode/
+.idea/
+.venv/
+venv/
+node_modules/
+__pycache__/
+*.py[cod]
+
+# Compose overrides and local-only stacks
+docker-compose.override.yml
+docker-compose.*.override.yml
+cloud/old-docker-compose.yml
+**/.git/
+
+# Large media and archives
 *.iso
 *.img
 *.dmg
-
-# Local development & IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-.DS_Store
-Thumbs.db
-
-# Node modules
-node_modules/
-
-# Python
-__pycache__/
-*.pyc
-*.pyo
-*.egg-info/
-.venv/
-venv/
-
-# Docker compose overrides
-docker-compose.override.yml
-
-# Temporary files
-.tmp/
-temp/
-*.tmp
-
-# PID files
-*.pid
-
-# Logs
-npm-debug.log
-yarn-error.log
-
-
-media/notifiarr/notifiarr.conf
-
-
-atlserver/bin
+*.tar
+*.tar.gz
+*.zip
