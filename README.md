@@ -27,7 +27,7 @@ Personal homelab built with Docker Compose for media, networking, cloud storage,
 | **Host OS** | Debian 13 — bare-metal or VM (e.g. Proxmox); i7-8700H, 40 GB RAM, 256 GB NVMe |
 | **Storage** | 1× 12 TB HDD (planned: RAID 10/ RAID 5 with 4× HDDs) |
 | **Hypervisor** | KVM/libvirt (virt-manager) — hosts Home Assistant VM (2 vCPU, 4 GB RAM) |
-| **Router** | TP-Link ER605 — OpenVPN server, DDNS, port forwarding, Gigabit LAN |
+| **Router** | UGM (ubiquiti gateway max — Wireguard server, port forwarding, 2.5 Gigabit LAN |
 
 ---
 
@@ -36,25 +36,24 @@ Personal homelab built with Docker Compose for media, networking, cloud storage,
 ```
 INTERNET
     |
-    | OpenVPN (UDP 1194)
+    | Wireguard (UDP )
     |
-TP-Link ER605 (192.168.0.1)
+Ubiquiti Gateway Max (192.168.0.1)
     |
-192.168.0.0/24 LAN
+192.168.20.0/24 VLAN
     |
-Debian Server (192.168.0.102 · 192.168.0.197 NPM · 192.168.0.198 Pi-hole)
+Debian Server (192.168.20.102 · 192.168.20.197 NPM · 192.168.20.198 Pi-hole, 192.168.20.199 & 192.168.20.200 for other services)
     |
     +-- Docker Stack (proxy_network)
     |   ├── Nginx Proxy Manager  :80/443/81  (192.168.0.197)
     |   ├── Pi-hole              :53/80      (192.168.0.198)
     |   ├── DDNS Updater         :8000
-    |   ├── OpenVPN              :1194/udp
     |   ├── Homarr               :7575
     |   ├── Dashdot              :3001
     |   ├── Transmission         :9091
-    |   ├── Plex                 (host network)
     |   ├── Jellyfin             :8096
     |   ├── Radarr / Sonarr / Prowlarr / Overseerr
+    |   ├── Plex                 (host network)
     |   ├── Seafile + MariaDB + Memcached
     |   ├── Syncthing            :8384
     |   └── Minecraft            :25565
@@ -62,7 +61,6 @@ Debian Server (192.168.0.102 · 192.168.0.197 NPM · 192.168.0.198 Pi-hole)
     +-- KVM/libvirt VM
     |   └── Home Assistant       :8123
     |
-    +-- Cloudflare Tunnel (external CRUD app, no port forwarding)
 ```
 
 ### Access patterns
@@ -71,8 +69,8 @@ Debian Server (192.168.0.102 · 192.168.0.197 NPM · 192.168.0.198 Pi-hole)
 |--------|---------|
 | Local via NPM | `https://subdomain.domain.duckdns.org` |
 | Local direct IP | `http://192.168.0.102:7575` |
-| Remote VPN | Connect to ER605 → use internal IPs |
-| Public (optional) | Domain via NPM + Let's Encrypt, or Cloudflare Tunnel |
+| Remote VPN | Connect to wg from UGM → use internal IPs |
+| Public (optional) | Domain via NPM + Let's Encrypt, or Cloudflare Tunnel (Paid domain recommended) |
 
 ---
 
@@ -174,7 +172,7 @@ Result: HDD sleeps ~90% of the time at idle. Note: enterprise/NAS drives (Seagat
 
 ### Service polling optimisation
 
-- **Transmission** — stop seeding at ratio 0.1; pause if idle > 5 min.
+- **Transmission** — stop seeding at ratio 2.0; pause if idle > 5 min.
 - **Radarr/Sonarr** — check for finished downloads every 120+ min.
 - **RSS polling** — disabled; manual refresh preferred.
 - **Webhooks** — trigger scans only on download completion (in test phase).
@@ -187,7 +185,7 @@ virsh list              # list VMs
 virsh start home-assistant
 ```
 
-Access: `http://192.168.0.109:8123` or via NPM reverse proxy.
+Access: `http://192.168.X.Y:8123` or via NPM reverse proxy.
 
 ---
 

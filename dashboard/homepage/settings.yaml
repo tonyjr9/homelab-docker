@@ -1,7 +1,7 @@
 ---
-title: Pedro's Homelab
-description: My self-hosted server dashboard
-startUrl: http://home.topedroserver.duckdns.org
+title: Topedro's Homelab
+description: Self-hosted server dashboard
+startUrl: https://home.topedroserver.duckdns.org
 
 theme: dark
 color: slate
