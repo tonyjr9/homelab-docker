@@ -111,6 +111,10 @@ git clone https://github.com/tonyjr9/homelab-docker.git /opt/docker
 cd /opt/docker
 ```
 
+On the server, `/opt/docker` is the canonical path and points to
+`/mnt/raid1/docker-configs`. Keep using `/opt/docker` in Compose commands and
+service configuration so the path remains stable if the storage mount changes.
+
 ### 2. Configure environment
 
 ```bash
@@ -207,7 +211,8 @@ Access: `http://192.168.X.Y:8123` or via NPM reverse proxy.
 ├── minecraft/
 └── .env
 
-/mnt/media/             # Large files (HDD)
+/mnt/raid1/docker-data/ # Docker Engine data-root (configured in /etc/docker/daemon.json)
+/mnt/media/             # Large media files (HDD)
 ├── media/
 │   ├── movies/
 │   ├── tvseries/
@@ -221,6 +226,27 @@ Monitor:
 ```bash
 du -sh /mnt/media/*
 df -h /mnt/media
+```
+
+### Docker Engine storage
+
+The server stores Docker's images, layers, volumes, and runtime state under
+`/mnt/raid1/docker-data`. The repository includes
+[`docker/daemon.json.example`](./docker/daemon.json.example) as the documented
+configuration:
+
+```json
+{
+  "data-root": "/mnt/raid1/docker-data"
+}
+```
+
+After changing `/etc/docker/daemon.json`, restart Docker during a maintenance
+window and verify the active root:
+
+```bash
+sudo systemctl restart docker
+docker info --format '{{.DockerRootDir}}'
 ```
 
 ---
@@ -309,4 +335,4 @@ sudo iotop -aoP
 
 ---
 
-**Last Updated:** June 2026 | **Status:** Active
+**Last Updated:** October 2026 | **Status:** Active

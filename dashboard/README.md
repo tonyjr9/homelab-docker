@@ -27,6 +27,7 @@ cd dashboard && docker compose up -d
 ```
 HOMARR_SECRET_KEY=your_secret_key
 CONFIG_PATH=/opt/docker
+DOCKER_DATA_ROOT=/mnt/raid1/docker-data
 ```
 
 ## Volumes

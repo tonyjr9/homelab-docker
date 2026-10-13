@@ -2,7 +2,11 @@
 set -Eeuo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DEFAULT_STACKS=(network dashboard cloud media syncthing minecraft minecraft_keith)
+ROOT_DIR="$(realpath "$ROOT_DIR")"
+CONFIG_ROOT="${CONFIG_PATH:-/opt/docker}"
+DATA_ROOT="${DOCKER_DATA_ROOT:-/mnt/raid1/docker-data}"
+EXPECTED_LINK="/opt/docker"
+DEFAULT_STACKS=(network dashboard cloud media minecraft minecraft_keith octoprint altserver wireguard)
 
 red='\033[0;31m'
 green='\033[0;32m'
@@ -93,8 +97,39 @@ doctor() {
   need_cmd docker
   info "Root directory: $ROOT_DIR"
 
+  if [[ -L "$EXPECTED_LINK" ]]; then
+    local link_target
+    link_target="$(readlink -f "$EXPECTED_LINK")"
+    if [[ "$link_target" == "$ROOT_DIR" ]]; then
+      ok "$EXPECTED_LINK -> $ROOT_DIR"
+    else
+      warn "$EXPECTED_LINK points to $link_target (expected $ROOT_DIR)"
+    fi
+  else
+    warn "$EXPECTED_LINK is not a symlink"
+  fi
+
+  if [[ -d "$CONFIG_ROOT" ]]; then
+    ok "Configuration path exists: $CONFIG_ROOT"
+  else
+    warn "Configuration path missing: $CONFIG_ROOT"
+  fi
+
+  if [[ -d "$DATA_ROOT" ]]; then
+    ok "Docker data path exists: $DATA_ROOT"
+  else
+    warn "Docker data path missing: $DATA_ROOT"
+  fi
+
   if docker info >/dev/null 2>&1; then
     ok "Docker daemon reachable"
+    local docker_root
+    docker_root="$(docker info --format '{{.DockerRootDir}}' 2>/dev/null || true)"
+    if [[ "$docker_root" == "$DATA_ROOT" ]]; then
+      ok "Docker root matches $DATA_ROOT"
+    elif [[ -n "$docker_root" ]]; then
+      warn "Docker root is $docker_root (expected $DATA_ROOT)"
+    fi
   else
     err "Docker daemon not reachable"
   fi
@@ -269,4 +304,3 @@ main() {
 }
 
 main "$@"
-

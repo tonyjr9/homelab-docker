@@ -37,6 +37,10 @@ The Debian server uses NetworkManager (`nmcli`) rather than a static
 - `br1.20` is the primary VLAN interface on the trusted/server VLAN.
 - The host has five addresses assigned through the NetworkManager
   configuration on that interface.
+- `/opt/docker` is the stable repository path and resolves to
+  `/mnt/raid1/docker-configs`.
+- Docker's engine data root is `/mnt/raid1/docker-data`; this is separate from
+  the `/mnt/media` HDD used for media files.
 - A separate bridge is used for the Home Assistant KVM/libvirt VM so Home
   Assistant can communicate with Wi-Fi-connected devices.
 - Docker services bind to the host addresses or Docker networks defined in
