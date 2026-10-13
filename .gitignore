@@ -9,6 +9,9 @@
 *.crt
 *.p12
 *.pfx
+**/*token*
+**/*credentials*
+**/*secret*
 
 # Runtime and generated service data
 **/config/

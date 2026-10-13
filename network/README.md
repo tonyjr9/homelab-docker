@@ -2,155 +2,148 @@
 
 Back to [Main README](../README.md)
 
-Core networking: reverse proxy with TLS, DNS/ad-blocking, dynamic DNS, and self-hosted OpenVPN.
+The Ubiquiti Gateway Max (UGM) is the network gateway, VLAN router, firewall,
+and WireGuard VPN server. Docker provides the local network services that run
+on the Debian host: Nginx Proxy Manager, Pi-hole, and DDNS Updater.
 
-[![Docker Compose](https://img.shields.io/badge/Docker-Compose-blue.svg)](https://docs.docker.com/compose/)
+## Network topology
+
+The UGM separates the network into these VLANs:
+
+| VLAN | Purpose | Access policy |
+|------|---------|---------------|
+| Management | Network infrastructure and administration | Reachable from the WireGuard VPN |
+| Trusted / server | Debian server, trusted clients, and the administrator's PC | Normal trusted access to services |
+| Guest | Guest clients | Internet-only; isolated from internal VLANs |
+| IoT | Home automation and other constrained devices | No access to Wi-Fi networks; only the explicitly allowed flows to Management |
+
+Firewall policies on the UGM allow:
+
+- WireGuard clients to reach the Management VLAN for administration and access
+  to the required server services.
+- Selected IoT-to-Management traffic so Home Assistant can discover and
+  control approved IoT devices.
+- No general IoT access to Wi-Fi or other internal networks.
+
+Keep the authoritative VLAN IDs, subnets, DHCP scopes, and firewall rules in
+the UGM configuration. Do not put live addresses, passwords, VPN keys, or
+exported client profiles in this repository.
+
+## Debian host networking
+
+The Debian server uses NetworkManager (`nmcli`) rather than a static
+`/etc/network/interfaces` configuration.
+
+- `br1.20` is the primary VLAN interface on the trusted/server VLAN.
+- The host has five addresses assigned through the NetworkManager
+  configuration on that interface.
+- A separate bridge is used for the Home Assistant KVM/libvirt VM so Home
+  Assistant can communicate with Wi-Fi-connected devices.
+- Docker services bind to the host addresses or Docker networks defined in
+  their Compose files.
+
+Useful inspection commands:
+
+```bash
+nmcli connection show
+nmcli device status
+ip -br address show br1.20
+ip route
+bridge link
+```
+
+When changing VLANs or addresses, update the UGM firewall policy and any
+Compose binding addresses together. Avoid documenting live `.env` values or
+private network exports here.
 
 ## Services
 
 | Service | Port | Purpose |
 |---------|------|---------|
-| **Nginx Proxy Manager** | 80 / 443 / 81 (admin) | Reverse proxy + Let's Encrypt TLS |
-| **Pi-hole** | 53 / 80 | DNS resolution + ad-blocking |
-| **DDNS Updater** | 8000 | Keeps DuckDNS in sync with WAN IP |
-| **OpenVPN** | 1194/udp | Self-hosted VPN (optional if using ER605) |
+| **Nginx Proxy Manager** | 80 / 443 / 81 (admin) | Reverse proxy and Let's Encrypt TLS |
+| **Pi-hole** | 53 / 80 | DNS resolution and ad blocking |
+| **DDNS Updater** | 8000 | Keeps DuckDNS in sync with the WAN address |
+| **WireGuard** | UGM-managed | Remote access to the Management VLAN and permitted server services |
 
-## IP Assignment
+The old Docker OpenVPN stack is not part of the active design. Keep its
+configuration only for historical reference; do not start it alongside the
+UGM WireGuard server.
 
-Multiple IPs on the host are required because NPM, Pi-hole and any service binding to port 80 each need their own IP address.
-
-| Service | IP |
-|---------|----|
-| Debian server / Docker | 192.168.0.102 |
-| Nginx Proxy Manager | 192.168.0.197 |
-| Pi-hole | 192.168.0.198 |
-
-Configure extra IPs via NetworkManager on the primary interface.
-
-## Quick Start
+## Quick start
 
 ```bash
-cp .env.example .env   # fill in NPM_IP, PIHOLE_IP, DUCKDNS_DOMAIN, DUCKDNS_TOKEN, etc.
+cp .env.example .env
+# Fill in local values on the deployment host only.
 docker compose up -d
 ```
 
-## Environment (`.env.example`)
+## Environment
 
-```
-NPM_IP=192.168.0.197
-PIHOLE_IP=192.168.0.198
-PIHOLE_PASSWORD=strongpassword
+`.env` is deployment-local and ignored by Git. Use `.env.example` as a
+placeholder template:
+
+```dotenv
+NPM_IP=replace-with-server-address
+PIHOLE_IP=replace-with-server-address
+PIHOLE_PASSWORD=replace-me
 DUCKDNS_DOMAIN=your-subdomain.duckdns.org
-DUCKDNS_TOKEN=your-token
+DUCKDNS_TOKEN=replace-me
 TZ=Europe/Lisbon
 CONFIG_PATH=/opt/docker
 ```
 
 ## Access
 
-- **NPM admin**: `http://192.168.0.197:81` — change default password immediately.
-- **Pi-hole**: `http://192.168.0.198/admin`
-- **DDNS UI**: `http://192.168.0.102:8000`
+- **NPM admin**: `http://<NPM_IP>:81` — change the default password
+  immediately.
+- **Pi-hole**: `http://<PIHOLE_IP>/admin`
+- **DDNS UI**: `http://<server-address>:8000`
+- **Remote access**: connect to the WireGuard server on the UGM, then use
+  only the internal addresses allowed by the UGM firewall policies.
 
-## NPM Setup
+## UGM WireGuard
 
-1. Log in and change the default admin password.
-2. **Proxy Hosts → Add** — set domain, forward to `container-name:port`, enable Let's Encrypt.
-3. Force SSL and test.
+1. Create or enable the WireGuard server on the UGM.
+2. Create one client profile per device and transfer profiles securely.
+3. Configure the client routes to include the Management VLAN and only the
+   server networks that the client needs.
+4. Confirm the UGM firewall permits WireGuard-to-Management traffic.
+5. Test DNS, server access, and Home Assistant access from a VPN client.
 
-## Pi-hole Setup
+Treat client profiles and private keys as secrets. Store them outside the
+repository and never paste them into README files, issues, or chat.
 
-Point your router's DNS (or individual clients) to `192.168.0.198`. Pi-hole logs all queries and blocks ads/malicious domains. It also pushes DNS to OpenVPN clients so they get ad-blocking while on VPN.
+## Home Assistant and IoT traffic
 
-## OpenVPN (Docker — optional)
+Home Assistant runs as a KVM/libvirt VM on the Debian host. Its VM network is
+attached to the dedicated host bridge so it can reach Wi-Fi-connected IoT
+devices through the UGM's permitted firewall flows.
 
-Use this if you do **not** have a hardware VPN gateway (e.g. TP-Link ER605). If you already use a hardware gateway, this service can be ignored.
+If an integration cannot discover or control a device:
 
-### Initial setup
+1. Confirm the device is on the IoT VLAN.
+2. Confirm the Home Assistant VM is attached to the intended bridge.
+3. Check that the UGM policy allows the required protocol and destination
+   from IoT to Management.
+4. Check multicast discovery requirements separately; only enable the
+   minimum relay or reflector scope required by the integration.
+5. Confirm that the IoT VLAN still has no general route to Wi-Fi networks.
 
-```bash
-cd /opt/docker/network
+## Security notes
 
-# Generate config (replace with your DuckDNS domain)
-docker run -v $(pwd)/openvpn-data:/etc/openvpn --rm \
-  kylemanna/openvpn ovpn_genconfig -u udp://YOUR-DOMAIN.duckdns.org -n 192.168.0.198
-
-# Init PKI (you will be prompted for a CA passphrase — store it safely)
-docker run -v $(pwd)/openvpn-data:/etc/openvpn --rm -it \
-  kylemanna/openvpn ovpn_initpki
-
-docker compose up -d openvpn
-```
-
-### Add a client
-
-```bash
-# Create certificate (no password)
-docker run -v $(pwd)/openvpn-data:/etc/openvpn --rm -it \
-  kylemanna/openvpn easyrsa build-client-full CLIENTNAME nopass
-
-# Export .ovpn file
-docker run -v $(pwd)/openvpn-data:/etc/openvpn --rm \
-  kylemanna/openvpn ovpn_getclient CLIENTNAME > CLIENTNAME.ovpn
-```
-
-### Revoke a client
-
-```bash
-docker run -v $(pwd)/openvpn-data:/etc/openvpn --rm -it \
-  kylemanna/openvpn easyrsa revoke CLIENTNAME
-docker run -v $(pwd)/openvpn-data:/etc/openvpn --rm -it \
-  kylemanna/openvpn easyrsa gen-crl
-docker compose restart openvpn
-```
-
-### Client apps
-
-- **Windows/macOS**: OpenVPN Connect or Tunnelblick
-- **Linux**: `sudo openvpn --config CLIENTNAME.ovpn`
-- **Android/iOS**: OpenVPN for Android / OpenVPN Connect
-
-## Remote Access via TP-Link ER605
-
-If using the router's built-in OpenVPN instead of the Docker container:
-
-1. Router admin → **VPN → OpenVPN Server** → enable and generate certificates.
-2. Forward UDP 1194 from upstream router to the ER605 if it's behind NAT.
-3. Export `.ovpn` and set the `remote` line to your DDNS domain:
-   ```
-   remote your-subdomain.duckdns.org 1194
-   ```
-4. Connect: `openvpn --config your-config.ovpn`
-
-## UFW Firewall
-
-```bash
-sudo apt install ufw
-sudo ufw default deny incoming
-sudo ufw default allow outgoing
-sudo ufw allow 22/tcp      # SSH
-sudo ufw allow 1194/udp    # OpenVPN
-sudo ufw allow <port>      # per service as needed
-sudo ufw enable
-```
-
-## Security Notes
-
-- Keep `.env` out of version control.
-- Use strong unique passwords for NPM and Pi-hole.
-- Prefer VPN for remote access over direct port forwarding.
-- Regularly update: `docker compose pull && docker compose up -d`.
-- For public domains, the most secure option is a Cloudflare domain with Cloudflare Tunnels — no port forwarding needed and no NPM required.
+- Keep `.env`, WireGuard profiles, private keys, and exported gateway
+  configuration out of Git.
+- Use one WireGuard key per client so lost devices can be revoked individually.
+- Keep Guest and IoT policies deny-by-default.
+- Allow only the IoT-to-Management flows required by Home Assistant.
+- Review UGM firewall logs after changing inter-VLAN policies.
+- Regularly update Docker images and the UGM firmware.
 
 ## Backup
 
-```bash
-# Pi-hole gravity DB
-docker cp pihole:/etc/pihole/gravity.db ./gravity_backup.db
-
-# OpenVPN PKI (keep this safe — contains all certificates)
-tar -czf openvpn-backup-$(date +%Y%m%d).tar.gz openvpn-data/
-```
+Back up the UGM configuration, WireGuard peer definitions, NetworkManager
+connection profiles, Docker Compose files, and Home Assistant VM separately.
+Encrypt backups because gateway exports and VPN profiles contain secrets.
 
 ## Maintenance
 
@@ -158,16 +151,21 @@ tar -czf openvpn-backup-$(date +%Y%m%d).tar.gz openvpn-data/
 docker compose pull && docker compose up -d
 docker compose logs -f npm
 docker compose logs -f pihole
+nmcli connection show
 ```
 
 ## Troubleshooting
 
-| Problem | Fix |
-|---------|-----|
-| NPM 502 | `docker exec npm ping <service>` — verify upstream is running and on `proxy_network` |
-| No DNS resolution | `docker exec pihole netstat -tlnp` — check port 53 is listening |
-| VPN connects but no internet | Verify Pi-hole is up; check `push "dhcp-option DNS"` in `openvpn.conf` |
-| DuckDNS not updating | `docker compose logs ddns-updater` |
+| Problem | Checks |
+|---------|--------|
+| VPN connects but services are unreachable | Verify the WireGuard routes and UGM VPN-to-Management firewall policy |
+| IoT device is not visible in Home Assistant | Verify the VM bridge, IoT-to-Management rule, and multicast discovery requirements |
+| IoT device reaches Wi-Fi | Review UGM inter-VLAN policies and remove broad allow rules |
+| NPM returns 502 | Check the upstream container, its bound server address, and `proxy_network` |
+| DNS fails on a VLAN | Confirm DHCP DNS settings and Pi-hole reachability from that VLAN |
+| DDNS is stale | Check `docker compose logs ddns-updater` and the UGM WAN address |
+| Server lost its addresses | Check `nmcli connection show`, `ip -br address show br1.20`, and the VLAN parent link |
 
 ---
-Updated March 2026.
+
+Updated October 2026.

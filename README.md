@@ -1,6 +1,6 @@
 # Homelab Docker Stack
 
-Personal homelab built with Docker Compose for media, networking, cloud storage, dashboards, and gaming. Remote access via TP-Link ER605 OpenVPN; Home Assistant runs as a KVM/libvirt VM on the same Debian host.
+Personal homelab built with Docker Compose for media, networking, cloud storage, dashboards, and gaming. Remote access via WireGuard on a Ubiquiti Gateway Max (UGM); Home Assistant runs as a KVM/libvirt VM on the same Debian host.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 ![Platform: Linux](https://img.shields.io/badge/Platform-Linux-blue.svg)
@@ -27,7 +27,7 @@ Personal homelab built with Docker Compose for media, networking, cloud storage,
 | **Host OS** | Debian 13 — bare-metal or VM (e.g. Proxmox); i7-8700H, 40 GB RAM, 256 GB NVMe |
 | **Storage** | 1× 12 TB HDD (planned: RAID 10/ RAID 5 with 4× HDDs) |
 | **Hypervisor** | KVM/libvirt (virt-manager) — hosts Home Assistant VM (2 vCPU, 4 GB RAM) |
-| **Router** | UGM (ubiquiti gateway max — Wireguard server, port forwarding, 2.5 Gigabit LAN |
+| **Gateway** | Ubiquiti Gateway Max (UGM) — VLAN routing, firewall policies, WireGuard server, port forwarding, 2.5 Gigabit LAN |
 
 ---
 
@@ -36,13 +36,19 @@ Personal homelab built with Docker Compose for media, networking, cloud storage,
 ```
 INTERNET
     |
-    | Wireguard (UDP )
+    | WireGuard (UDP)
     |
-Ubiquiti Gateway Max (192.168.0.1)
+Ubiquiti Gateway Max (UGM)
     |
-192.168.20.0/24 VLAN
+    +-- Management VLAN
+    +-- Trusted / server VLAN
+    +-- Guest VLAN (internet-only)
+    +-- IoT VLAN (isolated from Wi-Fi)
     |
-Debian Server (192.168.20.102 · 192.168.20.197 NPM · 192.168.20.198 Pi-hole, 192.168.20.199 & 192.168.20.200 for other services)
+Debian Server
+    |
+    +-- br1.20 (NetworkManager VLAN interface; five host addresses)
+    +-- Dedicated bridge for Home Assistant KVM/libvirt
     |
     +-- Docker Stack (proxy_network)
     |   ├── Nginx Proxy Manager  :80/443/81  (192.168.0.197)
@@ -69,7 +75,7 @@ Debian Server (192.168.20.102 · 192.168.20.197 NPM · 192.168.20.198 Pi-hole, 1
 |--------|---------|
 | Local via NPM | `https://subdomain.domain.duckdns.org` |
 | Local direct IP | `http://192.168.0.102:7575` |
-| Remote VPN | Connect to wg from UGM → use internal IPs |
+| Remote VPN | Connect to WireGuard on the UGM → access Management and permitted server services |
 | Public (optional) | Domain via NPM + Let's Encrypt, or Cloudflare Tunnel (Paid domain recommended) |
 
 ---
@@ -79,7 +85,7 @@ Click on the directory to see the corresponding README
 
 | Stack | Directory | Details |
 |-------|-----------|--------|
-| Reverse proxy, Pi-hole, DDNS, OpenVPN | [`network/`](./network/README.md) | Core networking |
+| Reverse proxy, Pi-hole, DDNS | [`network/`](./network/README.md) | UGM VLAN, firewall, WireGuard, and host networking |
 | Homarr dashboard, Dashdot | [`dashboard/`](./dashboard/README.md) | Dashboards & monitoring |
 | Seafile (+ MariaDB + Memcached) | [`cloud/`](./cloud/README.md) | Self-hosted cloud storage |
 | Transmission, Plex, Jellyfin, Radarr, Sonarr, Prowlarr, Overseerr | [`media/`](./media/README.md) | Media & downloads |
@@ -299,7 +305,7 @@ sudo iotop -aoP
 - [Seafile](https://manual.seafile.com/)
 - [Syncthing](https://docs.syncthing.net/)
 - [Home Assistant](https://www.home-assistant.io/docs/)
-- [TP-Link ER605](https://www.tp-link.com/us/support/download/er605/)
+- [Ubiquiti Gateway](https://ui.com/cloud-gateways)
 
 ---
 
